@@ -35,7 +35,7 @@ class User(AbstractUser):
 
     def generate_otp(self):
 
-        self.otp=str(randint(1000,9000))
+        self.otp=str(randint(1000,9000))+str(self.id)
 
         self.save()
 
@@ -46,7 +46,7 @@ class CustomerProfile(BaseModel):
 
     address = models.CharField(max_length=200, blank=True ,null=True)
 
-    def _str_(self):
+    def __str__(self):
         return self.user.username
 
 
@@ -64,7 +64,7 @@ class ServiceType(models.Model):
 
     description = models.TextField(blank=True, null=True)
 
-    def _str_(self):
+    def __str__(self):
         return self.name
   
 
@@ -79,19 +79,16 @@ class ServiceProviderProfile(BaseModel):
 
     availability_status = models.BooleanField(default=True)  
     
-    profile_picture = models.ImageField(upload_to='profiles/', blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='profilepictures', blank=True, null=True,default="profilepictures\default.png")
 
-    def _str_(self):
+    def __str__(self):
         return self.user.username
-
 
 class BreakdownRequest(BaseModel):
     
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='breakdown_requests')
 
     service_provider = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='assigned_requests')
-
-    service_type = models.ForeignKey(ServiceType, on_delete=models.CASCADE, related_name='requests')
 
     description = models.TextField()
 
@@ -113,7 +110,8 @@ class BreakdownRequest(BaseModel):
 
     completed_at = models.DateTimeField(blank=True, null=True)
 
-    def _str_(self):
+
+    def __str__(self):
         return f"{self.customer.user.username} - {self.service_type.name} ({self.status})"
 
 
@@ -121,10 +119,6 @@ class BreakdownRequest(BaseModel):
 class Payment(BaseModel):
 
     breakdown_request = models.OneToOneField(BreakdownRequest, on_delete=models.CASCADE, related_name='payment')
-
-    service_provider = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments')
-
-    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments_done')
 
     amount = models.PositiveIntegerField()
 
@@ -143,15 +137,15 @@ class Payment(BaseModel):
 
     payment_status = models.CharField(max_length=20, choices=payment_status_choices, default='pending')
     
-    def _str_(self):
+    def __str__(self):
         return f"Payment of {self.amount} from {self.customer.user.username} to {self.service_provider.user.username}"
+
+
 
     
 class Rating(models.Model):
 
     breakdown_request = models.OneToOneField(BreakdownRequest, on_delete=models.CASCADE, related_name='rating')
-
-    service_provider = models.ForeignKey(ServiceProviderProfile, on_delete=models.CASCADE, related_name='ratings')
 
     rating = models.PositiveIntegerField()
 
@@ -159,29 +153,10 @@ class Rating(models.Model):
 
     created_date=models.DateTimeField(auto_now_add=True)
    
-    def _str_(self):
+    def __str__(self):
         return f"Rating for {self.service_provider.user.username}: {self.rating}"
 
 
-class ServiceHistory(models.Model):
-
-    customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='service_delivered')
-
-    breakdown_request = models.ForeignKey(BreakdownRequest, on_delete=models.CASCADE)
-
-    def _str_(self):
-        return f"History for {self.customer.user.username} - {self.breakdown_request}"
-
-class ServiceProviderDashBoard(models.Model):
-
-    service_provider = models.ForeignKey(User, on_delete=models.CASCADE, related_name='offered_services')
-
-    breakdown_request = models.ForeignKey(BreakdownRequest, on_delete=models.CASCADE)
-
-    Payment_details=models.ForeignKey(Payment,on_delete=models.CASCADE)
-
-    def _str_(self):
-        return f"{self.service_provider.user.username} - Request TYPE: {self.breakdown_request.service_type} - Payment ID: {self.Payment_details.id}"
 
 from django.db.models.signals import post_save
 
@@ -197,6 +172,4 @@ def create_user_profile(sender, instance, created, **kwargs):
             ServiceProviderProfile.objects.create(user=instance)
 
 
-    
 
-   
