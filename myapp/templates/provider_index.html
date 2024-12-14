@@ -1,11 +1,130 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Service Provider Page</h1>
-</body>
-</html>
+{% extends "provider_base.html" %}
+
+{% block main_block %}
+
+
+<div class="relative my-12 flex w-full flex-col items-center sm:mt-24">
+  <!-- Loop through each breakdown request -->
+  {% for request in data %}
+  <div class="w-full max-w-4xl p-6 bg-white rounded-lg shadow-md border border-gray-300 mb-6 relative">
+    <!-- Header Section -->
+    <div class="flex justify-between items-start mb-4">
+      <h2 class="text-2xl font-bold text-gray-800">
+        Breakdown Request for {{ request.customer.username }}
+      </h2>
+      <p class="text-sm text-gray-500 absolute top-4 right-6">
+        <strong>Assigned At:</strong> {{ request.created_date|date:"M d, Y h:i A" }}
+      </p>
+    </div>
+
+    <!-- Customer Details -->
+    <div class="mb-4">
+      <p class="text-gray-600">
+        <strong>Customer Username:</strong> {{ request.customer.username }}
+      </p>
+      <p class="text-gray-600">
+        <strong>Phone Number:</strong> {{ request.customer.phone_number }}
+      </p>
+      <p class="text-gray-600">
+        <strong>Customer Address:</strong> {{ request.customer.customer_profile.address }}
+      </p>
+    </div>
+
+    <!-- Get Location Button -->
+    <div class="mb-4">
+      <p class="text-gray-600"><strong>Customer Location:</strong></p>
+      <button
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
+        onclick="showLocation('{{ request.latitude }}', '{{ request.longitude }}')">
+        Get Location
+      </button>
+    </div>
+
+    <!-- Service and Description -->
+    <div class="mb-4">
+      <p class="text-gray-600">
+        <strong>Service Types:</strong>
+        {% for service in request.service_provider.provider_profile.service_types.all %}
+          {{ service.name }}{% if not forloop.last %}, {% endif %}
+        {% endfor %}
+      </p>
+      <p class="text-gray-600">
+        <strong>Description:</strong> {{ request.description }}
+      </p>
+    </div>
+
+    <!-- Image Preview Section -->
+    <div class="mb-4">
+      <p class="text-gray-600"><strong>Image:</strong></p>
+      {% if request.image %}
+      <button
+        class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700"
+        onclick="toggleImage('{{ request.id }}')">
+        Preview Image
+      </button>
+      <div id="image-dropdown-{{ request.id }}" class="hidden mt-4">
+        <img
+          src="{{ request.image.url }}"
+          alt="Breakdown Request Image"
+          class="w-32 h-32 rounded-lg shadow-md transform transition-transform duration-300 cursor-pointer"
+          onclick="zoomImage(this)">
+      </div>
+      {% else %}
+      <p class="text-gray-500">No Image Provided</p>
+      {% endif %}
+    </div>
+
+    <!-- Actions -->
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="request_id" value="{{ request.id }}" />
+        
+        <div class="flex justify-center gap-4 mt-4">
+          <!-- Take Action Button -->
+          <button type="submit" name="action" value="accept" class="px-4 py-2 bg-teal-500 text-white rounded-lg shadow hover:bg-teal-600">
+            Take Action
+          </button>
+          <!-- Cancel Button -->
+          <button type="submit" name="action" value="cancel" class="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600">
+            Cancel
+          </button>
+        </div>
+      </form>
+      
+  </div>
+  {% empty %}
+  <p class="text-center text-gray-500">No breakdown requests assigned yet.</p>
+  {% endfor %}
+</div>
+
+<script>
+  function showLocation(latitude, longitude) {
+    if (latitude && longitude) {
+      alert(`Latitude: ${latitude}\nLongitude: ${longitude}`);
+    } else {
+      alert("Location information is not available.");
+    }
+  }
+
+  function toggleImage(requestId) {
+    const dropdown = document.getElementById(`image-dropdown-${requestId}`);
+    if (dropdown.classList.contains('hidden')) {
+      dropdown.classList.remove('hidden');
+    } else {
+      dropdown.classList.add('hidden');
+    }
+  }
+
+  function zoomImage(imageElement) {
+    imageElement.classList.toggle('zoomed');
+  }
+</script>
+
+<style>
+  .zoomed {
+    transform: scale(2); /* Adjust scale as needed */
+    transition: transform 0.3s ease-in-out;
+  }
+</style>
+
+{% endblock %}

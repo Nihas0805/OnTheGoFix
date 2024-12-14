@@ -1,0 +1,87 @@
+{% extends 'customer_base.html' %}
+
+{% block main_block %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <div class="form-group">
+        {{ form.service_provider_username.label_tag }}
+        {{ form.service_provider_username }}
+        <small class="form-text text-muted"></small>
+    </div>
+
+    <div class="form-group">
+        {{ form.service_types.label_tag }}
+        
+        <!-- Loop through the grouped service types -->
+        {% for vehicle_type, services in form.grouped_service_types.items %}
+            {% if services %}
+            <div class="vehicle-type-section">
+                <h5>{{ vehicle_type|capfirst }}</h5>
+                
+                <div class="form-check">
+                    <!-- Display each service type as a checkbox under the respective vehicle type -->
+                    {% for service in services %}
+                    <label class="form-check-label">
+                        <input type="checkbox" name="service_types" value="{{ service.id }}" class="form-check-input">
+                        {{ service.name }}
+                    </label><br>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="form-group">
+        {{ form.description.label_tag }}
+        {{ form.description }}
+    </div>
+
+    <div class="form-group">
+        {{ form.image.label_tag }}
+        {{ form.image }}
+    </div>
+
+    <div class="form-group">
+        {{ form.customer_address.label_tag }}
+        {{ form.customer_address }}
+    </div>
+
+    <div class="form-group">
+        {{ form.latitude }}
+        {{ form.longitude }}
+        <button type="button" id="get-location" class="btn btn-secondary">Get My Location</button>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+<script>
+    document.getElementById('get-location').addEventListener('click', function () {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    // Set latitude and longitude values
+                    const latitudeField = document.getElementById('id_latitude');
+                    const longitudeField = document.getElementById('id_longitude');
+
+                    if (latitudeField && longitudeField) {
+                        latitudeField.value = position.coords.latitude;
+                        longitudeField.value = position.coords.longitude;
+                        alert("Location added successfully!");
+                    } else {
+                        alert("Latitude or Longitude field not found in the form.");
+                    }
+                },
+                function (error) {
+                    // Handle geolocation errors
+                    alert("Error occurred while fetching geolocation.");
+                }
+            );
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% block main_block %}
+<h2>Edit Profile</h2>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <h3>Update Service Provider Profile</h3>
+
+    <!-- Render Username -->
+    <label for="{{ form.username.id_for_label }}">Name</label>
+    {{ form.username }}
+
+    <!-- Render Service Types -->
+    <h4>Service Types</h4>
+    <div>
+        {{ form.service_types }}
+    </div>
+
+    <!-- Other Fields -->
+    <label for="{{ form.address.id_for_label }}">Address</label>
+    {{ form.address }}
+
+    <label for="{{ form.availability_status.id_for_label }}">Availability Status</label>
+    {{ form.availability_status }}
+
+    <label for="{{ form.profile_picture.id_for_label }}">Profile Picture</label>
+    {{ form.profile_picture }}
+
+    <button type="submit">Save Changes</button>
+</form>
+
+
+
+{% endblock %}

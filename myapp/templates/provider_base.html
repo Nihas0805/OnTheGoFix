@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Navbar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+  href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+  rel="stylesheet"
+/>
+
+</head>
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3.x.x/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<!-- remove nightwind-prevent-block to use nightwind-mode -->
+<body>
+<nav x-data="{ mobileMenuIsOpen: false, isVisible: true, lastScrollY: 0 }"
+  @scroll.window="if (window.scrollY > lastScrollY && window.scrollY > 100) { isVisible = false } else { isVisible = true; } lastScrollY = window.scrollY"
+  :class="{'translate-y-0': isVisible, '-translate-y-full': !isVisible}"
+  class="nightwind-prevent-block fixed top-0 left-0 right-0 z-20 flex items-center justify-between w-full p-4 transition-transform duration-300 ease-in-out bg-white bg-opacity-80 backdrop-blur-md"
+  aria-label="penguin ui menu">
+  <!-- Brand Logo -->
+  <a href="#" class="text-2xl font-bold text-neutral-900 dark:text-white nightwind-prevent">
+LOGO
+  </a>
+  <!-- End Brand Logo -->
+
+  <!-- Search -->
+  <div class="relative ml-3 flex flex-col w-full gap-1 mr-auto max-w-64 text-neutral-600 dark:text-neutral-300">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+      aria-hidden="true"
+      class="absolute left-2.5 top-1/2 size-5 -translate-y-1/2 text-neutral-600/50 dark:text-neutral-300/50">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+    </svg>
+    <input type="search"
+            name="search"
+            placeholder="Search"
+            aria-label="search"
+            class="w-full rounded-md border border-neutral-300 bg-neutral-50 py-2.5 pl-10 pr-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black disabled:cursor-not-allowed disabled:opacity-75 dark:border-neutral-700 dark:bg-neutral-900/50 dark:focus-visible:outline-white" />
+  </div> <!-- End Search -->
+
+  <!-- Desktop Menu -->
+  <ul class="items-center flex-shrink-0 hidden gap-4 sm:flex">
+    
+    <li>
+      <a href="{%url 'provider-index'%}"
+        class="font-bold nightwind-prevent underline-offset-2 hover:text-black focus:outline-none focus:underline dark:text-black dark:hover:text-black"
+        aria-current="page">
+    Home
+      </a>
+    </li>
+   <li>
+    
+      <a href="{%url 'provider-profile'%}"
+        class="font-bold nightwind-prevent underline-offset-2 hover:text-black focus:outline-none focus:underline dark:text-black dark:hover:text-black"
+        aria-current="page">
+  Profile
+      </a>
+    </li>
+    <!-- This button is a toggle for dark mode with nightwind -->
+    <li>
+      <button
+    id="dark-mode"
+    class="flex items-center justify-center w-8 h-8 text-center transition duration-300 rounded-full focus:outline-none">
+
+    <div id="icon-container" class="grid w-10 h-10">
+      <svg id="dark-icon" class="hidden w-6 h-6 place-self-center fill-yellow-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+        <path d="M223.5 32C100 32 0 132.3 0 256S100 480 223.5 480c60.6 0 115.5-24.2 155.8-63.4c5-4.9 6.3-12.5 3.1-18.7s-10.1-9.7-17-8.5c-9.8 1.7-19.8 2.6-30.1 2.6c-96.9 0-175.5-78.8-175.5-176c0-65.8 36-123.1 89.3-153.3c6.1-3.5 9.2-10.5 7.7-17.3s-7.3-11.9-14.3-12.5c-6.3-.5-12.6-.8-19-.8z"/>
+      </svg>
+
+      <svg id="light-icon" class="hidden w-6 h-6 place-self-center fill-yellow-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+        <path d="M256 0c-13.3 0-24 10.7-24 24V88c0 13.3 10.7 24 24 24s24-10.7 24-24V24c0-13.3-10.7-24-24-24zm0 400c-13.3 0-24 10.7-24 24v64c0 13.3 10.7 24 24 24s24-10.7 24-24V424c0-13.3-10.7-24-24-24zM488 280c13.3 0 24-10.7 24-24s-10.7-24-24-24H424c-13.3 0-24 10.7-24 24s10.7 24 24 24h64zM112 256c0-13.3-10.7-24-24-24H24c-13.3 0-24 10.7-24 24s10.7 24 24 24H88c13.3 0 24-10.7 24-24zM437 108.9c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-45.3 45.3c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0L437 108.9zM154.2 357.8c-9.4-9.4-24.6-9.4-33.9 0L75 403.1c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l45.3-45.3c9.4-9.4 9.4-24.6 0-33.9zM403.1 437c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-45.3-45.3c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9L403.1 437zM154.2 154.2c9.4-9.4 9.4-24.6 0-33.9L108.9 75c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l45.3 45.3c9.4 9.4 24.6 9.4 33.9 0zM256 368a112 112 0 1 0 0-224 112 112 0 1 0 0 224z"/>
+      </svg>
+    </div>
+  </button>
+    </li>
+
+
+
+    <!-- User Pic -->
+    <li x-data="{ userDropDownIsOpen: false, openWithKeyboard: false }"
+      @keydown.esc.window="userDropDownIsOpen = false, openWithKeyboard = false" class="relative flex items-center">
+      <button @click="userDropDownIsOpen = ! userDropDownIsOpen"
+                :aria-expanded="userDropDownIsOpen"
+                @keydown.space.prevent="openWithKeyboard = true"
+                @keydown.enter.prevent="openWithKeyboard = true"
+                @keydown.down.prevent="openWithKeyboard = true"
+                class="rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black dark:focus-visible:outline-white"
+                aria-controls="userMenu">
+                <img src="https://penguinui.s3.amazonaws.com/component-assets/avatar-8.webp"
+                    alt="User Profile"
+                    class="object-cover rounded-full size-10" />
+            </button>
+      <!-- User Dropdown -->
+      <ul x-cloak x-show="userDropDownIsOpen || openWithKeyboard" x-transition.opacity x-trap="openWithKeyboard"
+        @click.outside="userDropDownIsOpen = false, openWithKeyboard = false"
+        @keydown.down.prevent="$focus.wrap().next()" @keydown.up.prevent="$focus.wrap().previous()" id="userMenu"
+        class="absolute right-0 top-12 flex w-full min-w-[12rem] flex-col overflow-hidden rounded-md border border-neutral-300 bg-neutral-50 py-1.5 dark:border-neutral-700 dark:bg-neutral-900">
+        <li class="border-b border-neutral-300 dark:border-neutral-700">
+          <div class="flex flex-col px-4 py-2">
+            <span class="text-sm font-medium text-neutral-900 dark:text-white">
+                            Alice Brown
+                        </span>
+            <p class="text-xs text-neutral-600 dark:text-neutral-300">
+              alice.brown@gmail.com
+            </p>
+          </div>
+        </li>
+        <li>
+          <a href="#"
+            class="block px-4 py-2 text-sm bg-neutral-50 text-neutral-600 hover:bg-neutral-900/5 hover:text-neutral-900 focus-visible:bg-neutral-900/10 focus-visible:text-neutral-900 focus-visible:outline-none dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-50/5 dark:hover:text-white dark:focus-visible:bg-neutral-50/10 dark:focus-visible:text-white">
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="#"
+            class="block px-4 py-2 text-sm bg-neutral-50 text-neutral-600 hover:bg-neutral-900/5 hover:text-neutral-900 focus-visible:bg-neutral-900/10 focus-visible:text-neutral-900 focus-visible:outline-none dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-50/5 dark:hover:text-white dark:focus-visible:bg-neutral-50/10 dark:focus-visible:text-white">
+            Subscription
+          </a>
+        </li>
+        <li>
+          <a href="#"
+            class="block px-4 py-2 text-sm bg-neutral-50 text-neutral-600 hover:bg-neutral-900/5 hover:text-neutral-900 focus-visible:bg-neutral-900/10 focus-visible:text-neutral-900 focus-visible:outline-none dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-50/5 dark:hover:text-white dark:focus-visible:bg-neutral-50/10 dark:focus-visible:text-white">
+            Settings
+          </a>
+        </li>
+        <li>
+          <a href="#"
+            class="block px-4 py-2 text-sm bg-neutral-50 text-neutral-600 hover:bg-neutral-900/5 hover:text-neutral-900 focus-visible:bg-neutral-900/10 focus-visible:text-neutral-900 focus-visible:outline-none dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-50/5 dark:hover:text-white dark:focus-visible:bg-neutral-50/10 dark:focus-visible:text-white">
+            Sign Out
+          </a>
+        </li>
+      </ul> <!-- End User Dropdown -->
+    </li> <!-- End User Pic -->
+  </ul> <!-- End Desktop Menu -->
+
+  <!-- Mobile Menu Button -->
+  <button @click="mobileMenuIsOpen = !mobileMenuIsOpen"
+        :aria-expanded="mobileMenuIsOpen"
+        :class="mobileMenuIsOpen ? 'fixed top-6 right-6 z-20' : null"
+        type="button"
+        class="flex text-neutral-600 dark:text-neutral-300 sm:hidden"
+        aria-label="mobile menu"
+        aria-controls="mobileMenu">
+        <svg x-cloak
+            x-show="!mobileMenuIsOpen"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+            class="size-6">
+            <path stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+        <svg x-cloak
+            x-show="mobileMenuIsOpen"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+            class="size-6">
+            <path stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 18 18 6M6 6l12 12" />
+        </svg>
+    </button> <!-- End Mobile Menu Button -->
+
+  <!-- Mobile Menu -->
+  <template x-teleport="body">
+    <div x-show="mobileMenuIsOpen" @keydown.window.escape="mobileMenuIsOpen=false" class="relative z-[99]">
+      <div x-show="mobileMenuIsOpen" x-transition.opacity.duration.600ms @click="mobileMenuIsOpen = false"
+        class="fixed inset-0 bg-black bg-opacity-10"></div>
+      <div class="fixed inset-0 overflow-hidden">
+        <div class="absolute inset-0 overflow-hidden">
+          <div class="fixed inset-y-0 right-0 flex max-w-full pl-10">
+            <div x-show="mobileMenuIsOpen" @click.away="mobileMenuIsOpen = false"
+              x-transition:enter="transform transition ease-in-out duration-500 sm:duration-700"
+              x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+              x-transition:leave="transform transition ease-in-out duration-500 sm:duration-700"
+              x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
+              class="w-screen max-w-md">
+              <div
+                class="flex flex-col h-full py-5 overflow-y-scroll bg-white border-l shadow-lg border-neutral-100/70">
+                <div class="px-4 sm:px-5">
+                  <div class="flex items-start justify-between pb-1">
+                    <h2 class="text-base font-semibold leading-6 text-gray-900" id="slide-over-title">
+                      Slide Over Title
+                    </h2>
+                    <div class="flex items-center h-auto ml-3">
+                      <button @click="mobileMenuIsOpen=false"
+                                                class="absolute top-0 right-0 z-30 flex items-center justify-center px-3 py-2 mt-4 mr-5 space-x-1 text-xs font-medium uppercase border rounded-md border-neutral-200 text-neutral-600 hover:bg-neutral-100">
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke-width="1.5"
+                                                    stroke="currentColor"
+                                                    class="w-4 h-4">
+                                                    <path stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                                <span>Close</span>
+                                            </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="relative flex-1 px-4 mt-5 sm:px-5">
+                  <div class="absolute inset-0 px-4 sm:px-5">
+                    <div class="relative h-full overflow-hidden border border-dashed rounded-md border-neutral-300">
+                      <!-- Content can be added here -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div> <!-- End Mobile Menu -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+  <!-- prettier-ignore-end -->
+</nav>
+<div class="mt-14">{% block main_block %}
+  {% endblock %}
+
+</div>
+</body>
+      
+    
+  
+
+  <script>
+  module.exports = {
+  content: ['./src/**/*.{html,js}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [require('daisyui')],
+};
+ 
+document.addEventListener('DOMContentLoaded', () => {
+    var nightwind = {
+        beforeTransition: () => {
+            const doc = document.documentElement;
+            const onTransitionDone = () => {
+                doc.classList.remove('nightwind');
+                doc.removeEventListener('transitionend', onTransitionDone);
+            }
+
+            doc.addEventListener('transitionend', onTransitionDone);
+            if (!doc.classList.contains('nightwind')) {
+                doc.classList.add('nightwind');
+            }
+        },
+
+        toggle: () => {
+            nightwind.beforeTransition();
+            const doc = document.documentElement;
+
+            if (!doc.classList.contains('dark')) {
+                doc.classList.add('dark');
+                window.localStorage.setItem('nightwind-mode', 'dark');
+            } else {
+                doc.classList.remove('dark');
+                window.localStorage.setItem('nightwind-mode', 'light');
+            }
+        },
+
+        enable: (dark) => {
+            const mode = dark ? "dark" : "light";
+            const opposite = dark ? "light" : "dark";
+
+            nightwind.beforeTransition();
+            const doc = document.documentElement;
+
+            if (doc.classList.contains(opposite)) {
+                doc.classList.remove(opposite);
+            }
+            doc.classList.add(mode);
+            window.localStorage.setItem('nightwind-mode', mode);
+        },
+    };
+
+    // Initialize the initial color mode
+    (function() {
+        function getInitialColorMode() {
+            const persistedColorPreference = window.localStorage.getItem('nightwind-mode');
+            const hasPersistedPreference = typeof persistedColorPreference === 'string';
+            if (hasPersistedPreference) {
+                return persistedColorPreference;
+            }
+            const mql = window.matchMedia('(prefers-color-scheme: dark)');
+            const hasMediaQueryPreference = typeof mql.matches === 'boolean';
+            return hasMediaQueryPreference ? (mql.matches ? 'dark' : 'light') : 'light';
+        }
+
+        const initialMode = getInitialColorMode();
+        document.documentElement.classList.toggle('dark', initialMode === 'dark');
+    })();
+    const darkButtonElement = document.getElementById('dark-mode');
+    let isDarkmode = window.localStorage.getItem('nightwind-mode') === 'dark';
+    const darkIcon = document.getElementById('dark-icon');
+    const lightIcon = document.getElementById('light-icon');
+    
+    // Function to toggle dark mode
+    function toggleDarkMode() {
+        isDarkmode = !isDarkmode;
+        window.localStorage.setItem('nightwind-mode', isDarkmode);
+    
+        // Toggle the visibility of the icons
+        darkIcon.classList.toggle('hidden', !isDarkmode);
+        lightIcon.classList.toggle('hidden', isDarkmode);
+    
+        // Assuming nightwind.toggle() handles the dark mode toggle
+        nightwind.toggle();
+    }
+    
+    // Attach the event listener
+    darkButtonElement.addEventListener('click', toggleDarkMode);
+    
+    // Initialize the state on page load
+    if (isDarkmode) {
+        darkIcon.classList.remove('hidden'); // Show dark icon if dark mode is active
+    } else {
+        lightIcon.classList.remove('hidden'); // Show light icon if light mode is active
+    }    
+
+});document.addEventListener('DOMContentLoaded', () => {
+    var nightwind = {
+        beforeTransition: () => {
+            const doc = document.documentElement;
+            const onTransitionDone = () => {
+                doc.classList.remove('nightwind');
+                doc.removeEventListener('transitionend', onTransitionDone);
+            }
+
+            doc.addEventListener('transitionend', onTransitionDone);
+            if (!doc.classList.contains('nightwind')) {
+                doc.classList.add('nightwind');
+            }
+        },
+
+        toggle: () => {
+            nightwind.beforeTransition();
+            const doc = document.documentElement;
+
+            if (!doc.classList.contains('dark')) {
+                doc.classList.add('dark');
+                window.localStorage.setItem('nightwind-mode', 'dark');
+            } else {
+                doc.classList.remove('dark');
+                window.localStorage.setItem('nightwind-mode', 'light');
+            }
+        },
+
+        enable: (dark) => {
+            const mode = dark ? "dark" : "light";
+            const opposite = dark ? "light" : "dark";
+
+            nightwind.beforeTransition();
+            const doc = document.documentElement;
+
+            if (doc.classList.contains(opposite)) {
+                doc.classList.remove(opposite);
+            }
+            doc.classList.add(mode);
+            window.localStorage.setItem('nightwind-mode', mode);
+        },
+    };
+
+    // Initialize the initial color mode
+    (function() {
+        function getInitialColorMode() {
+            const persistedColorPreference = window.localStorage.getItem('nightwind-mode');
+            const hasPersistedPreference = typeof persistedColorPreference === 'string';
+            if (hasPersistedPreference) {
+                return persistedColorPreference;
+            }
+            const mql = window.matchMedia('(prefers-color-scheme: dark)');
+            const hasMediaQueryPreference = typeof mql.matches === 'boolean';
+            return hasMediaQueryPreference ? (mql.matches ? 'dark' : 'light') : 'light';
+        }
+
+        const initialMode = getInitialColorMode();
+        document.documentElement.classList.toggle('dark', initialMode === 'dark');
+    })();
+    const darkButtonElement = document.getElementById('dark-mode');
+    let isDarkmode = window.localStorage.getItem('nightwind-mode') === 'dark';
+    const darkIcon = document.getElementById('dark-icon');
+    const lightIcon = document.getElementById('light-icon');
+    
+    // Function to toggle dark mode
+    function toggleDarkMode() {
+        isDarkmode = !isDarkmode;
+        window.localStorage.setItem('nightwind-mode', isDarkmode);
+    
+        // Toggle the visibility of the icons
+        darkIcon.classList.toggle('hidden', !isDarkmode);
+        lightIcon.classList.toggle('hidden', isDarkmode);
+    
+        // Assuming nightwind.toggle() handles the dark mode toggle
+        nightwind.toggle();
+    }
+    
+    // Attach the event listener
+    darkButtonElement.addEventListener('click', toggleDarkMode);
+    
+    // Initialize the state on page load
+    if (isDarkmode) {
+        darkIcon.classList.remove('hidden');
+    } else {
+        lightIcon.classList.remove('hidden'); 
+    }    
+
+});
+
+  </script>
+</body>
+</html>

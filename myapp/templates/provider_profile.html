@@ -1,0 +1,98 @@
+{% extends "provider_base.html" %}
+{% block main_block %}
+{% load static %}
+
+<!-- Check if a profile exists -->
+{% if profile %}
+<div class="relative block overflow-hidden rounded-lg border border-gray-100 p-4 sm:p-6 lg:p-8">
+  <span
+    class="absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r from-green-300 via-blue-500 to-purple-600"
+  ></span>
+
+  <!-- Header Section -->
+  <div class="sm:flex sm:justify-between sm:gap-4">
+    <div class="flex items-center gap-4">
+      <h3 class="text-lg font-bold text-gray-900 sm:text-xl">
+        {{ profile.user.username }}
+      </h3>
+
+      <!-- Update Profile Button -->
+      <a href="{% url 'provider-edit' %}"
+         class="ml-4 px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring">
+         Update Profile
+      </a>
+    </div>
+
+    <!-- Profile Picture -->
+    <div class="hidden sm:block sm:shrink-0">
+      {% if profile.profile_picture %}
+      <img
+        alt="Profile Picture"
+        src="{{ profile.profile_picture.url }}"
+        class="w-20 h-20 lg:w-24 lg:h-24 rounded-lg object-cover shadow-sm"
+      />
+      {% else %}
+      <img
+        alt="Default Profile Picture"
+        src="{% static 'profilepictures/default.png' %}"
+        class="w-20 h-20 lg:w-24 lg:h-24 rounded-lg object-cover shadow-sm"
+      />
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Grouped Vehicle Types and Service Types -->
+  <div class="mt-6">
+    <h4 class="text-lg font-bold text-gray-800">Vehicle Types and Services:</h4>
+
+    <!-- Loop through each Vehicle Type -->
+    {% for vehicle_type, services in grouped_services.items %}
+      {% if services.exists %}
+      <div class="mt-4">
+        <!-- Vehicle Type Header -->
+        <h5 class="font-bold text-gray-700 cursor-pointer"
+            onclick="toggleElement('vehicle-{{ vehicle_type }}')">
+          {{ vehicle_type|capfirst }}
+        </h5>
+
+        <!-- Services under Vehicle Type -->
+        <div id="vehicle-{{ vehicle_type }}" class="hidden pl-4 mt-2">
+          {% for service in services %}
+          <div class="mb-2">
+            <!-- Service Name -->
+            <span class="cursor-pointer text-blue-600 hover:underline"
+                  onclick="toggleElement('service-{{ service.id }}')">
+              {{ service.name }}
+            </span>
+
+            <!-- Service Description (Initially Hidden) -->
+            <div id="service-{{ service.id }}"
+                 class="hidden mt-2 p-2 bg-gray-100 border border-gray-300 rounded-lg shadow">
+              <p class="text-xs text-gray-500">{{ service.description }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Address Section -->
+  <div class="mt-6">
+    <p class="text-gray-700"><strong>Address:</strong> {{ profile.address }}</p>
+  </div>
+{% else %}
+<p class="text-center text-gray-600">No profile available for the logged-in user.</p>
+{% endif %}
+</div>
+
+<!-- JavaScript for Toggle Functionality -->
+<script>
+  // Function to toggle visibility of an element
+  function toggleElement(id) {
+    const element = document.getElementById(id);
+    element.classList.toggle('hidden');
+  }
+</script>
+{% endblock %}

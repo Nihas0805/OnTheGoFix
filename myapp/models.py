@@ -79,8 +79,8 @@ class ServiceProviderProfile(BaseModel):
 
     availability_status = models.BooleanField(default=True)  
     
-    profile_picture = models.ImageField(upload_to='profilepictures', blank=True, null=True,default="profilepictures\default.png")
-
+    profile_picture = models.ImageField(upload_to='profilepictures/', blank=True, null=True, default="profilepictures/default.png")
+    
     def __str__(self):
         return self.user.username
 
@@ -90,6 +90,8 @@ class BreakdownRequest(BaseModel):
 
     service_provider = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='assigned_requests')
 
+    service_types = models.ManyToManyField(ServiceType, related_name='breakdown_requests')  
+
     description = models.TextField()
 
     image = models.ImageField(upload_to='images/', blank=True, null=True)
@@ -97,8 +99,10 @@ class BreakdownRequest(BaseModel):
     status_choices = [
         ('pending', 'Pending'),
         ('accepted', 'Accepted'),
+        ('pick_up', 'Pick up Completed'),
         ('in_progress', 'In Progress'),
         ('completed', 'Completed'),
+        ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),
         ]
 
@@ -112,7 +116,8 @@ class BreakdownRequest(BaseModel):
 
 
     def __str__(self):
-        return f"{self.customer.user.username} - {self.service_type.name} ({self.status})"
+        return f"{self.customer.username} - {self.status}"
+
 
 
 
@@ -147,7 +152,7 @@ class Rating(models.Model):
 
     breakdown_request = models.OneToOneField(BreakdownRequest, on_delete=models.CASCADE, related_name='rating')
 
-    rating = models.PositiveIntegerField()
+    rating = models.PositiveIntegerField(default=5)
 
     review = models.TextField(blank=True, null=True)
 

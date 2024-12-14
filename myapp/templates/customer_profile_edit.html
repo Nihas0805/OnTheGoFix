@@ -1,0 +1,29 @@
+{% extends 'customer_base.html' %}
+
+{% block main_block %}
+
+
+
+  <h2>Edit Profile</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="id_username">Username</label>
+        {{ form.username }}
+    </div>
+
+    <div class="form-group">
+        <label for="id_email">Email</label>
+        {{ form.email }}
+    </div>
+
+    <div class="form-group">
+        <label for="id_address">Address</label>
+        {{ form.address }}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+  </form>
+
+
+{% endblock %}

@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from myapp import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -25,4 +27,13 @@ urlpatterns = [
     path('customer/index/', views.CustomerIndexView.as_view(),name="customer-index"),
     path('provider/index/', views.ProviderIndexView.as_view(),name="provider-index"),
     path('signin/', views.SignInView.as_view(),name="signin"),
+    path('provider/profile/update/', views.ServiceProviderProfileEditView.as_view(),name="provider-edit"),
+    
+    path('provider/profile/', views.ProviderProfileView.as_view(),name="provider-profile"),
+    path('create/breakdown/request/<int:service_provider_id>/',views.BreakdownRequestCreateView.as_view(), name='create-breakdownrequest'),
+    path('customer/profile/update/',views.CustomerProfileEditView.as_view(), name='customer-edit'),
+    path('customer/profile/',views.CustomerProfileListView.as_view(), name='customer-profile'),
+    path('breakdown/request/update/<int:pk>/',views.BreakdownRequestUpdateView.as_view(), name='breakdownrequest-edit'),
 ]
+if settings.DEBUG:  # Serve media files during development
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

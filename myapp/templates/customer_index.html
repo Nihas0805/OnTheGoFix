@@ -1,11 +1,115 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Customer Page</h1>
-</body>
-</html>
+{% extends 'customer_base.html' %}
+{% block main_block %}
+{% load static %}
+
+<div class="flex flex-wrap gap-6 justify-center px-4 mt-24">
+  <!-- Loop through all service providers -->
+  {% for provider in providers %}
+  <div
+    class="w-full sm:w-[48%] lg:w-[48%] xl:w-[48%] relative block overflow-hidden rounded-lg border-2 border-gray-200 shadow-lg transition-shadow duration-300 hover:shadow-xl hover:border-gray-400 p-6 lg:p-12"
+    id="provider-card-{{ provider.user.id }}"
+  >
+    <span
+      class="absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r from-green-300 via-blue-500 to-purple-600"
+    ></span>
+
+    <!-- Header Section with Username and Profile Picture -->
+    <div class="flex justify-between items-center gap-4">
+      <div>
+        <h3 class="text-xl lg:text-2xl font-bold text-gray-900">
+          {{ provider.user.username }}
+        </h3>
+
+        <p class="mt-1 text-sm font-medium text-gray-600">
+          Status: {{ provider.availability_status|yesno:"Available,Not Available" }}
+        </p>
+      </div>
+
+      <div class="shrink-0">
+        {% if provider.profile_picture %}
+        <img
+          alt="Profile Picture"
+          src="{{ provider.profile_picture.url }}"
+          class="w-20 h-20 lg:w-24 lg:h-24 rounded-lg object-cover shadow-sm"
+        />
+        {% else %}
+        <img
+          alt="Default Profile Picture"
+          src="{% static 'profilepictures/default.png' %}"
+          class="w-20 h-20 lg:w-24 lg:h-24 rounded-lg object-cover shadow-sm"
+        />
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Vehicle Types and Services -->
+    <div class="mt-6">
+      <p class="text-sm lg:text-base text-gray-700 font-bold">Vehicle Type and Services:</p>
+
+      {% for vehicle_type in vehicle_types %}
+        {% with provider.service_types.all|dictsort:"vehicle_type" as services %}
+        {% if services %}
+        <!-- Vehicle Type Header -->
+        <div class="mb-4">
+          <h4 class="font-bold text-gray-700 mt-4 cursor-pointer"
+              onclick="toggleElement('vehicle-type-{{ provider.user.id }}-{{ vehicle_type }}')">
+            {{ vehicle_type|capfirst }}
+          </h4>
+
+          <!-- Service Types Under Vehicle Type -->
+          <div id="vehicle-type-{{ provider.user.id }}-{{ vehicle_type }}" class="hidden mt-2 pl-4">
+            {% for service in services %}
+              {% if service.vehicle_type == vehicle_type %}
+              <div class="mb-2">
+                <!-- Service Type Name -->
+                <span class="cursor-pointer text-blue-600 hover:underline"
+                      onclick="toggleElement('service-{{ provider.user.id }}-{{ service.id }}')">
+                  {{ service.name }}
+                </span>
+
+                <!-- Service Description (Initially Hidden) -->
+                <div id="service-{{ provider.user.id }}-{{ service.id }}"
+                     class="hidden mt-2 p-2 bg-gray-100 border border-gray-300 rounded-lg shadow">
+                  <p class="text-xs text-gray-500">{{ service.description }}</p>
+                </div>
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        {% endwith %}
+      {% endfor %}
+    </div>
+
+    <!-- Address Section -->
+    <dl class="mt-6 flex gap-4 sm:gap-6">
+      <div class="flex flex-col-reverse">
+        <dt class="text-sm lg:text-base font-medium text-gray-600">
+          Address: {{ provider.address }}
+        </dt>
+      </div>
+    </dl>
+
+    <!-- Request Service Button -->
+    <div class="mt-6 flex justify-center">
+      <a href="{% url 'create-breakdownrequest' service_provider_id=provider.user.id %}"
+         class="block text-center bg-blue-600 text-white text-lg font-bold py-2 rounded-lg w-[75%] transition-colors duration-300 hover:bg-blue-700">
+        Request Service
+      </a>
+    </div>
+  </div>
+  {% empty %}
+  <p class="text-gray-500">No Service Providers Available</p>
+  {% endfor %}
+</div>
+
+<!-- JavaScript for Toggle Functionality -->
+<script>
+  // Function to toggle visibility of an element
+  function toggleElement(id) {
+    const element = document.getElementById(id);
+    element.classList.toggle('hidden');
+  }
+</script>
+{% endblock %}
