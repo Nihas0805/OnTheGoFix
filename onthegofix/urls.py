@@ -26,6 +26,7 @@ urlpatterns = [
     path('veriify/email/', views.VerifyEmailView.as_view(),name="verify-email"),
     path('customer/index/', views.CustomerIndexView.as_view(),name="customer-index"),
     path('provider/index/', views.ProviderIndexView.as_view(),name="provider-index"),
+    path("get-location/<int:request_id>/", views.ProviderIndexView.as_view(), name="get_location"),
     path('signin/', views.SignInView.as_view(),name="signin"),
     path('provider/profile/update/', views.ServiceProviderProfileEditView.as_view(),name="provider-edit"),
     
@@ -34,6 +35,8 @@ urlpatterns = [
     path('customer/profile/update/',views.CustomerProfileEditView.as_view(), name='customer-edit'),
     path('customer/profile/',views.CustomerProfileListView.as_view(), name='customer-profile'),
     path('breakdown/request/update/<int:pk>/',views.BreakdownRequestUpdateView.as_view(), name='breakdownrequest-edit'),
+    path('provider/dashboard/view/',views.ServiceProviderDashboardView.as_view(), name='provider-dashboard'),
+    path('set/payment/<int:pt>',views.SetPaymentAmountView.as_view(), name='set-payment'),
 ]
 if settings.DEBUG:  # Serve media files during development
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

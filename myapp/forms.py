@@ -67,7 +67,6 @@ class ServiceProviderProfileForm(forms.ModelForm):
 
 
 class BreakdownRequestCreateForm(forms.ModelForm):
-    
     # Service Provider Username (Read-Only Field)
     service_provider_username = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
@@ -75,7 +74,7 @@ class BreakdownRequestCreateForm(forms.ModelForm):
         label="Service Provider"
     )
     customer_address = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control',}),
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
         required=False,
         label="Address"
     )
@@ -83,8 +82,9 @@ class BreakdownRequestCreateForm(forms.ModelForm):
     # Dynamically group service types by vehicle type
     service_types = forms.ModelMultipleChoiceField(
         queryset=ServiceType.objects.none(),
-        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-control'}),  # SelectMultiple for multi-select
-        required=True
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
+        required=True,
+        label="Service Types"
     )
 
     latitude = forms.FloatField(widget=forms.HiddenInput(), required=True)
@@ -92,25 +92,21 @@ class BreakdownRequestCreateForm(forms.ModelForm):
 
     class Meta:
         model = BreakdownRequest
-        fields = ['description', 'image', 'latitude', 'longitude']
+        fields = ['description', 'image', 'latitude', 'longitude', 'service_types']
 
     def __init__(self, *args, **kwargs):
-        # Extract custom arguments
         service_provider = kwargs.pop('service_provider', None)
         user = kwargs.pop('user', None)
-
-        # Initialize the parent class
         super().__init__(*args, **kwargs)
 
-        # Dynamically filter service_types based on the selected service_provider
+        # Set service types based on the selected service provider
         if service_provider:
             self.fields['service_types'].queryset = service_provider.service_types.all()
 
-        # Set the service provider username (Read-Only Display)
+        # Prepopulate the service provider username and customer address
         if service_provider and service_provider.user:
             self.fields['service_provider_username'].initial = service_provider.user.username
-        
-        # Set the customer address
+
         if user and hasattr(user, 'customer_profile'):
             self.fields['customer_address'].initial = user.customer_profile.address
 
@@ -118,7 +114,7 @@ class BreakdownRequestCreateForm(forms.ModelForm):
         self.fields['description'].widget.attrs.update({'class': 'form-control'})
         self.fields['image'].widget.attrs.update({'class': 'form-control'})
 
-        # Group the service types by vehicle type
+        # Prepare grouped service types for display
         self.grouped_service_types = self.group_service_types_by_vehicle_type(service_provider)
 
     def group_service_types_by_vehicle_type(self, service_provider):
@@ -130,11 +126,9 @@ class BreakdownRequestCreateForm(forms.ModelForm):
             'four_wheeler': [],
             'others': []
         }
-
-        # Filter the service types by the vehicle_type field
-        for service in service_provider.service_types.all():
-            grouped[service.vehicle_type].append(service)
-
+        if service_provider:
+            for service in service_provider.service_types.all():
+                grouped[service.vehicle_type].append(service)
         return grouped
 
 

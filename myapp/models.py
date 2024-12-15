@@ -1,6 +1,6 @@
 from django.db import models
 
-from django.contrib.auth.models import AbstractUser,User
+from django.contrib.auth.models import AbstractUser
 
 from django.utils.translation import gettext_lazy as _
 
@@ -147,6 +147,7 @@ class Payment(BaseModel):
 
 
 
+
     
 class Rating(models.Model):
 
@@ -160,6 +161,7 @@ class Rating(models.Model):
    
     def __str__(self):
         return f"Rating for {self.service_provider.user.username}: {self.rating}"
+
 
 
 

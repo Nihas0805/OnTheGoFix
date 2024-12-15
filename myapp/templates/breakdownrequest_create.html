@@ -1,31 +1,23 @@
-{% extends 'customer_base.html' %}
-
-{% block main_block %}
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     
     <div class="form-group">
         {{ form.service_provider_username.label_tag }}
         {{ form.service_provider_username }}
-        <small class="form-text text-muted"></small>
     </div>
 
     <div class="form-group">
-        {{ form.service_types.label_tag }}
-        
-        <!-- Loop through the grouped service types -->
+        <label for="service_types">Service Types</label>
         {% for vehicle_type, services in form.grouped_service_types.items %}
             {% if services %}
             <div class="vehicle-type-section">
                 <h5>{{ vehicle_type|capfirst }}</h5>
-                
-                <div class="form-check">
-                    <!-- Display each service type as a checkbox under the respective vehicle type -->
+                <div>
                     {% for service in services %}
-                    <label class="form-check-label">
-                        <input type="checkbox" name="service_types" value="{{ service.id }}" class="form-check-input">
-                        {{ service.name }}
-                    </label><br>
+                        <div class="form-check">
+                            <input type="checkbox" name="service_types" value="{{ service.id }}" class="form-check-input">
+                            <label class="form-check-label">{{ service.name }}</label>
+                        </div>
                     {% endfor %}
                 </div>
             </div>
@@ -56,27 +48,44 @@
 
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
-
 <script>
     document.getElementById('get-location').addEventListener('click', function () {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function (position) {
-                    // Set latitude and longitude values
-                    const latitudeField = document.getElementById('id_latitude');
-                    const longitudeField = document.getElementById('id_longitude');
+                    // Get latitude and longitude from Geolocation API
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+
+                    // Find input fields for latitude and longitude
+                    const latitudeField = document.querySelector('#id_latitude');
+                    const longitudeField = document.querySelector('#id_longitude');
 
                     if (latitudeField && longitudeField) {
-                        latitudeField.value = position.coords.latitude;
-                        longitudeField.value = position.coords.longitude;
-                        alert("Location added successfully!");
+                        // Set values to input fields
+                        latitudeField.value = latitude;
+                        longitudeField.value = longitude;
+                        alert("Location fetched successfully!");
                     } else {
                         alert("Latitude or Longitude field not found in the form.");
                     }
                 },
                 function (error) {
-                    // Handle geolocation errors
-                    alert("Error occurred while fetching geolocation.");
+                    // Handle possible Geolocation errors
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            alert("Permission denied. Please enable location access.");
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            alert("Location information is unavailable.");
+                            break;
+                        case error.TIMEOUT:
+                            alert("The request to get location timed out.");
+                            break;
+                        default:
+                            alert("An unknown error occurred.");
+                            break;
+                    }
                 }
             );
         } else {
@@ -84,4 +93,3 @@
         }
     });
 </script>
-{% endblock %}

@@ -10,7 +10,7 @@ from django.contrib import messages
 
 from twilio.rest import Client
 
-from myapp.models import User,BreakdownRequest,ServiceProviderProfile,BreakdownRequest,CustomerProfile,ServiceType
+from myapp.models import User,BreakdownRequest,ServiceProviderProfile,BreakdownRequest,CustomerProfile,ServiceType,Payment
 
 from django.contrib.auth import authenticate,login
 
@@ -139,42 +139,55 @@ class CustomerIndexView(View):
 
         
 
-
-
-
-
 class ProviderIndexView(View):
     template_name = "provider_index.html"
 
     def get(self, request, *args, **kwargs):
-        # Fetch the breakdown requests assigned to the service provider
+        # Fetch pending breakdown requests for the current service provider
         qs = BreakdownRequest.objects.filter(service_provider=request.user, status='pending').order_by('created_date')
 
-        return render(request, self.template_name, {"data": qs})
+        breakdown_data = []
+        for request_instance in qs:
+            try:
+                # Group services under vehicle types
+                grouped_services = {
+                    'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
+                    'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
+                    'others': request_instance.service_types.filter(vehicle_type='others'),
+                }
+            except ServiceType.DoesNotExist:
+                grouped_services = None
+
+            # Append processed request data
+            breakdown_data.append({
+                "request": request_instance,
+                "grouped_services": grouped_services,
+            })
+
+        # Pass structured data to the template
+        context = {
+            "data": breakdown_data,
+        }
+        return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        # Extract the action (accept or cancel) and request_id from the POST data
+        # Handle the accept or cancel action
         action = request.POST.get("action")
         request_id = request.POST.get("request_id")
 
-        # Fetch the breakdown request object
+        # Fetch and update the status of the breakdown request
         breakdown_request = BreakdownRequest.objects.filter(id=request_id).first()
-
         if breakdown_request:
-            # Perform the action based on the button clicked
             if action == "accept":
                 breakdown_request.status = "accepted"
             elif action == "cancel":
                 breakdown_request.status = "cancelled"
-
-            # Save the updated request
             breakdown_request.save()
 
-        # Re-fetch the updated queryset to display the latest breakdown requests
-        qs = BreakdownRequest.objects.filter(service_provider=request.user, status='pending').order_by('created_date')
+        # Redirect back to the updated view
+        return self.get(request, *args, **kwargs) 
 
-        # Redirect back to the list page with the updated queryset
-        return render(request, self.template_name, {"data": qs})
+
 
 
 class SignInView(FormView):
@@ -284,63 +297,44 @@ class ProviderProfileView(LoginRequiredMixin, View):
 
 
 class BreakdownRequestCreateView(LoginRequiredMixin, View):
-
     template_name = 'breakdownrequest_create.html'
 
     def get(self, request, *args, **kwargs):
-        # Get the service provider ID from the URL
-        service_provider_id = kwargs.get('service_provider_id')
-
-        # Fetch the service provider details
-        service_provider = ServiceProviderProfile.objects.filter(user_id=service_provider_id).first()
-
-        if not service_provider:
-            # Redirect if the service provider does not exist
-            return redirect('customer-index')  # Replace 'customer-index' with the appropriate URL
-
-        # Initialize the form with the service provider and user context
-        form = BreakdownRequestCreateForm(service_provider=service_provider, user=request.user)
-
-        # Render the template with form and service provider data
-        return render(request, self.template_name, {'form': form, 'service_provider': service_provider})
-
-    def post(self, request, *args, **kwargs):
-    # Get the service provider ID and details
         service_provider_id = kwargs.get('service_provider_id')
         service_provider = ServiceProviderProfile.objects.filter(user_id=service_provider_id).first()
 
         if not service_provider:
             return redirect('customer-index')  # Redirect if service provider doesn't exist
 
-        # Pass the POST data and file data to the form
+        form = BreakdownRequestCreateForm(service_provider=service_provider, user=request.user)
+        return render(request, self.template_name, {'form': form, 'service_provider': service_provider})
+
+    def post(self, request, *args, **kwargs):
+        service_provider_id = kwargs.get('service_provider_id')
+        service_provider = ServiceProviderProfile.objects.filter(user_id=service_provider_id).first()
+
+        if not service_provider:
+            return redirect('customer-index')
+
         form = BreakdownRequestCreateForm(request.POST, request.FILES, service_provider=service_provider, user=request.user)
 
         if form.is_valid():
-            # Create a breakdown request instance but don't save yet
             breakdown_request = form.save(commit=False)
-
-            # Assign the logged-in user as the customer
             breakdown_request.customer = request.user
-
-            # Assign the selected service provider
             breakdown_request.service_provider = service_provider.user
-
-            # Save the breakdown request instance
             breakdown_request.save()
-
-            # Save many-to-many field (service_types)
             form.save_m2m()
 
+            # Update customer address
             customer_address = form.cleaned_data.get('customer_address')
             if request.user.customer_profile:
                 request.user.customer_profile.address = customer_address
                 request.user.customer_profile.save()
 
-            # Redirect to a success or index page
-            return redirect('customer-index')  # Replace with an appropriate success URL
+            return redirect('customer-index')
 
-        # If form is not valid, render the form with error messages
-        return render(request, self.template_name, {'form': form, 'service_provider': service_provider})             
+        return render(request, self.template_name, {'form': form, 'service_provider': service_provider})
+          
 
 
 
@@ -421,12 +415,110 @@ class BreakdownRequestUpdateView(View):
                 updated_request.status = 'cancelled'
 
             # If status is completed, populate the `completed_at` field
-            if updated_request.status == 'completed':
+            if updated_request.status == 'delivered':
                 updated_request.completed_at = now()
             else:
                 updated_request.completed_at = None
 
             updated_request.save()
-            return redirect("provider-index")  # Redirect to the list view or wherever you want
+            return redirect("provider-dashboard")  # Redirect to the list view or wherever you want
 
         return render(request, self.template_name, {"form": form, "breakdown_request": breakdown_request})
+ 
+
+
+
+class ServiceProviderDashboardView(View):
+    template_name = "provider_dashboard.html"
+
+    def get(self, request, *args, **kwargs):
+        # Fetch all breakdown requests except 'pending', 'cancelled', and 'completed' statuses for the current user
+        qs = BreakdownRequest.objects.filter(
+            service_provider=request.user
+        ).exclude(status__in=['pending', 'cancelled', 'delivered']).order_by('-created_date')
+
+        breakdown_data = []
+        for request_instance in qs:
+            try:
+                # Group services under vehicle types
+                grouped_services = {
+                    'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
+                    'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
+                    'others': request_instance.service_types.filter(vehicle_type='others'),
+                }
+            except ServiceType.DoesNotExist:
+                grouped_services = None
+
+            breakdown_data.append({
+                "request": request_instance,
+                "grouped_services": grouped_services,
+                "status": request_instance.get_status_display(),  # Display the readable status
+            })
+
+        context = {
+            "data": breakdown_data,
+        }
+        return render(request, self.template_name, context)
+
+from django.http import Http404 
+
+class SetPaymentAmountView(View):
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')  # Retrieve the `pt` parameter from URL
+        breakdown_request = BreakdownRequest.objects.filter(pk=pk).first()
+
+        if not breakdown_request:
+            raise Http404("Breakdown Request not found.")
+
+        # Check if the service provider is the logged-in user
+        if breakdown_request.service_provider != request.user:
+            raise Http404("You are not authorized to access this request.")
+
+        # Check if the BreakdownRequest status is 'completed'
+        if breakdown_request.status != 'completed':
+            return render(request, 'set_payment_amount.html', {
+                'breakdown_request': breakdown_request,
+                'error': "Payment can only be initiated after the request is completed.",
+            })
+
+        # Try to get the Payment object associated with this BreakdownRequest
+        payment, created = Payment.objects.get_or_create(breakdown_request=breakdown_request)
+
+        return render(request, 'set_payment_amount.html', {
+            'breakdown_request': breakdown_request,
+            'payment': payment,
+            'created': created,
+        })
+
+    def post(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')  # Retrieve the `pt` parameter from URL
+        breakdown_request = BreakdownRequest.objects.filter(pk=pk).first()
+
+        if not breakdown_request:
+            raise Http404("Breakdown Request not found.")
+
+        if breakdown_request.service_provider != request.user:
+            raise Http404("You are not authorized to update this request.")
+
+        if breakdown_request.status != 'completed':
+            return render(request, 'set_payment_amount.html', {
+                'breakdown_request': breakdown_request,
+                'error': "Payment can only be initiated after the request is completed.",
+            })
+
+        # Get the amount from the POST data
+        amount = request.POST.get('amount')
+        if not amount or int(amount) <= 0:
+            return render(request, 'set_payment_amount.html', {
+                'breakdown_request': breakdown_request,
+                'error': "Invalid amount provided.",
+            })
+
+        # Fetch the Payment object (or create if it doesn't exist)
+        payment, created = Payment.objects.get_or_create(breakdown_request=breakdown_request)
+
+        # Set the payment amount
+        payment.amount = int(amount)
+        payment.save()
+
+        return redirect('customer_payment_page', pk=pk)  # Redirect to customer payment page

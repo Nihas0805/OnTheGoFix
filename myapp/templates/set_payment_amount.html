@@ -1,0 +1,26 @@
+<h1>Set Payment Amount</h1>
+<p>Breakdown Request ID: {{ breakdown_request.id }}</p>
+
+{% if error %}
+    <p style="color: red;">{{ error }}</p>
+{% else %}
+    <form method="post">
+        {% csrf_token %}
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" name="amount" required>
+        <button type="submit">Submit</button>
+    </form>
+{% endif %}
+<h1>Set Payment Amount</h1>
+<p>Breakdown Request ID: {{ breakdown_request.id }}</p>
+
+{% if error %}
+    <p style="color: red;">{{ error }}</p>
+{% else %}
+    <form method="post">
+        {% csrf_token %}
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" name="amount" required>
+        <button type="submit">Submit</button>
+    </form>
+{% endif %}
