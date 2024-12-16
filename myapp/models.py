@@ -132,7 +132,7 @@ class Payment(BaseModel):
                     ('razorpay', 'razorpay')
                     ]
 
-    payment_method = models.CharField(max_length=50, choices=payment_choices)
+    payment_method = models.CharField(max_length=50, choices=payment_choices ,default='cod')
 
     payment_status_choices=[
                            ('pending', 'Pending'),  

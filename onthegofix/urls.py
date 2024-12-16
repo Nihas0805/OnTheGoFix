@@ -36,7 +36,7 @@ urlpatterns = [
     path('customer/profile/',views.CustomerProfileListView.as_view(), name='customer-profile'),
     path('breakdown/request/update/<int:pk>/',views.BreakdownRequestUpdateView.as_view(), name='breakdownrequest-edit'),
     path('provider/dashboard/view/',views.ServiceProviderDashboardView.as_view(), name='provider-dashboard'),
-    path('set/payment/<int:pt>',views.SetPaymentAmountView.as_view(), name='set-payment'),
+    path('set/payment/<int:pk>',views.SetPaymentAmountView.as_view(), name='set-payment'),
 ]
 if settings.DEBUG:  # Serve media files during development
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

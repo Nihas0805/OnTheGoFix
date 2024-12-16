@@ -464,7 +464,7 @@ from django.http import Http404
 
 class SetPaymentAmountView(View):
     def get(self, request, *args, **kwargs):
-        pk = kwargs.get('pk')  # Retrieve the `pt` parameter from URL
+        pk = kwargs.get('pk')  # Retrieve the primary key from URL
         breakdown_request = BreakdownRequest.objects.filter(pk=pk).first()
 
         if not breakdown_request:
@@ -481,17 +481,19 @@ class SetPaymentAmountView(View):
                 'error': "Payment can only be initiated after the request is completed.",
             })
 
-        # Try to get the Payment object associated with this BreakdownRequest
-        payment, created = Payment.objects.get_or_create(breakdown_request=breakdown_request)
+        # Check for existing Payment; do not create if it doesn't exist
+        try:
+            payment = Payment.objects.get(breakdown_request=breakdown_request)
+        except Payment.DoesNotExist:
+            payment = None  # Set to None if it doesn't exist
 
         return render(request, 'set_payment_amount.html', {
             'breakdown_request': breakdown_request,
             'payment': payment,
-            'created': created,
         })
 
     def post(self, request, *args, **kwargs):
-        pk = kwargs.get('pk')  # Retrieve the `pt` parameter from URL
+        pk = kwargs.get('pk')  # Retrieve the primary key from URL
         breakdown_request = BreakdownRequest.objects.filter(pk=pk).first()
 
         if not breakdown_request:
@@ -514,11 +516,14 @@ class SetPaymentAmountView(View):
                 'error': "Invalid amount provided.",
             })
 
-        # Fetch the Payment object (or create if it doesn't exist)
-        payment, created = Payment.objects.get_or_create(breakdown_request=breakdown_request)
+        # Fetch or create the Payment object
+        payment, created = Payment.objects.get_or_create(
+            breakdown_request=breakdown_request,
+            defaults={'amount': int(amount)}  # Default payment_method
+        )
 
-        # Set the payment amount
-        payment.amount = int(amount)
-        payment.save()
+        if not created:  # Update the amount if Payment already exists
+            payment.amount = int(amount)
+            payment.save()
 
-        return redirect('customer_payment_page', pk=pk)  # Redirect to customer payment page
+        return redirect('provider-dashboard')  # Redirect to the next page
