@@ -12,17 +12,22 @@ from twilio.rest import Client
 
 from myapp.models import User,BreakdownRequest,ServiceProviderProfile,BreakdownRequest,CustomerProfile,ServiceType,Payment
 
-from django.contrib.auth import authenticate,login
+from django.contrib.auth import authenticate,login,logout
 
 from django.urls import reverse_lazy
 
 from django.db.models import Case, When, Value, IntegerField
 
+from decouple import config
+
+from django.http import JsonResponse
+
+
 
 
 def send_otp_phone(otp):
-    account_sid = "ACf59b762f511f7abd4d7ae2872eaf9107"
-    auth_token = "ce219a2f217f965cdf8b7146b5441503"
+    account_sid = config('TWILIO_ACCOUNT_SID')
+    auth_token = config('TWILIO_AUTH_TOKEN')
     client = Client(account_sid, auth_token)
     try:
         message = client.messages.create(
@@ -217,8 +222,16 @@ class SignInView(FormView):
                 elif user_object.role == 'provider':
                     return redirect('provider-index')  
             else:
-                form.add_error(None, "Invalid username or password")
+                form_instance.add_error(None, "Invalid username or password")
         return render(request, self.template_name, {'form': form_instance})
+
+class LogoutView(View):
+    
+    def get(self,request,*args,**kwargs):
+
+        logout(request)
+
+        return redirect("signin")
     
 
 
@@ -230,13 +243,13 @@ class ServiceProviderProfileEditView(View):
 
     def get(self, request, *args, **kwargs):
         # Fetch the user's profile object or create one if it doesn't exist
-        profile_object, created = ServiceProviderProfile.objects.get_or_create(user=request.user)
+        profile_object = ServiceProviderProfile.objects.get(user=request.user)
         form_instance = self.form_class(instance=profile_object, user=request.user)
         return render(request, self.template_name, {"form": form_instance})
 
     def post(self, request, *args, **kwargs):
         # Fetch the user's profile object or create one if it doesn't exist
-        profile_object, created = ServiceProviderProfile.objects.get_or_create(user=request.user)
+        profile_object = ServiceProviderProfile.objects.get(user=request.user)
         
         # Bind POST data and FILES to the form instance
         form_instance = self.form_class(request.POST, request.FILES, instance=profile_object, user=request.user)
@@ -334,6 +347,73 @@ class BreakdownRequestCreateView(LoginRequiredMixin, View):
             return redirect('customer-index')
 
         return render(request, self.template_name, {'form': form, 'service_provider': service_provider})
+
+class ProviderBreakdownRequestDetailView(View):
+    template_name = "breakdownrequest_provider_detail.html"
+
+    def get(self, request, *args, **kwargs):
+        id = kwargs.get("pk")
+
+        # Fetch a single BreakdownRequest object
+        try:
+            request_instance = BreakdownRequest.objects.get(id=id)
+        except BreakdownRequest.DoesNotExist:
+            return render(request, self.template_name, {"error": "Breakdown request not found."})
+
+        try:
+            # Group services under vehicle types
+            grouped_services = {
+                'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
+                'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
+                'others': request_instance.service_types.filter(vehicle_type='others'),
+            }
+        except ServiceType.DoesNotExist:
+            grouped_services = None
+
+        # Prepare context data for the template
+        breakdown_data = {
+            "request": request_instance,
+            "grouped_services": grouped_services,
+        }
+
+        context = {
+            "data": [breakdown_data],  # Wrap in a list to maintain template structure
+        }
+        return render(request, self.template_name, context)
+
+class CustomerBreakdownRequestDetailView(View):
+    template_name = "breakdownrequest_customer_detail.html"
+
+    def get(self, request, *args, **kwargs):
+        id = kwargs.get("pk")
+
+        # Fetch a single BreakdownRequest object
+        try:
+            request_instance = BreakdownRequest.objects.get(id=id)
+        except BreakdownRequest.DoesNotExist:
+            return render(request, self.template_name, {"error": "Breakdown request not found."})
+
+        try:
+            # Group services under vehicle types
+            grouped_services = {
+                'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
+                'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
+                'others': request_instance.service_types.filter(vehicle_type='others'),
+            }
+        except ServiceType.DoesNotExist:
+            grouped_services = None
+
+        # Prepare context data for the template
+        breakdown_data = {
+            "request": request_instance,
+            "grouped_services": grouped_services,
+        }
+
+        context = {
+            "data": [breakdown_data],  # Wrap in a list to maintain template structure
+        }
+        return render(request, self.template_name, context)
+
           
 
 
@@ -421,7 +501,8 @@ class BreakdownRequestUpdateView(View):
                 updated_request.completed_at = None
 
             updated_request.save()
-            return redirect("provider-dashboard")  # Redirect to the list view or wherever you want
+            return redirect('provider-dashboard')
+              # Redirect to the list view or wherever you want
 
         return render(request, self.template_name, {"form": form, "breakdown_request": breakdown_request})
  
@@ -435,7 +516,7 @@ class ServiceProviderDashboardView(View):
         # Fetch all breakdown requests except 'pending', 'cancelled', and 'completed' statuses for the current user
         qs = BreakdownRequest.objects.filter(
             service_provider=request.user
-        ).exclude(status__in=['pending', 'cancelled', 'delivered']).order_by('-created_date')
+        ).exclude(status__in=['delivered','cancelled']).order_by('-created_date')
 
         breakdown_data = []
         for request_instance in qs:
@@ -527,3 +608,182 @@ class SetPaymentAmountView(View):
             payment.save()
 
         return redirect('provider-dashboard')  # Redirect to the next page
+
+
+class CustomerDashboardView(View):
+    template_name = "customer_dashboard.html"
+
+    def get(self, request, *args, **kwargs):
+        # Fetch all breakdown requests except 'pending', 'cancelled', and 'completed' statuses for the current user
+        qs = BreakdownRequest.objects.filter(
+            customer=request.user
+        ).exclude(status__in=['delivered']).order_by('-created_date')
+
+        breakdown_data = []
+        for request_instance in qs:
+            try:
+                # Group services under vehicle types
+                grouped_services = {
+                    'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
+                    'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
+                    'others': request_instance.service_types.filter(vehicle_type='others'),
+                }
+            except ServiceType.DoesNotExist:
+                grouped_services = None
+
+            breakdown_data.append({
+                "request": request_instance,
+                "grouped_services": grouped_services,
+                "status": request_instance.get_status_display(),  # Display the readable status
+            })
+
+        context = {
+            "data": breakdown_data,
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        # Handle the accept or cancel action
+        action = request.POST.get("action")
+        request_id = request.POST.get("request_id")
+
+        # Fetch and update the status of the breakdown request
+        breakdown_request = BreakdownRequest.objects.filter(id=request_id).first()
+        if breakdown_request:
+            if action == "cancel":
+                breakdown_request.status = "cancelled"
+                breakdown_request.save()
+
+        # Redirect back to the updated view
+        return self.get(request, *args, **kwargs)
+
+import razorpay
+
+import json
+
+class CustomerPaymentView(View):
+    template_name = 'customer_payment.html'
+
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')
+        breakdown_request = get_object_or_404(BreakdownRequest, pk=pk)
+        payment = Payment.objects.filter(breakdown_request=breakdown_request).first()
+
+        if not payment:
+            raise Http404("Payment not found for this Breakdown Request.")
+
+        return render(request, self.template_name, {
+            'breakdown_request': breakdown_request,
+            'payment': payment
+        })
+
+    def post(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')
+        breakdown_request = get_object_or_404(BreakdownRequest, pk=pk)
+        payment = Payment.objects.get(breakdown_request=breakdown_request)
+
+        # Prevent further payments if already completed
+        if payment.payment_status == 'completed':
+            return JsonResponse({"error": "Payment has already been completed."}, status=400)
+
+        # Parse JSON data if sent via fetch
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            data = request.POST
+
+        payment_method = data.get('payment_method')
+
+        if payment_method == 'razorpay':
+            client = razorpay.Client(auth=(config('KEY_ID'), config('KEY_SECRET')))
+            razorpay_order = client.order.create({
+                "amount": payment.amount * 100,  # Convert to paisa
+                "currency": "INR",
+                "receipt": f"order_rcptid_{payment.id}",
+            })
+
+            payment.payment_method = 'razorpay'
+            payment.razorpay_order_id = razorpay_order['id']
+            payment.save()
+
+            return JsonResponse({
+                "key": config('KEY_ID'),
+                "amount": razorpay_order['amount'],
+                "order_id": razorpay_order['id'],
+                "name": "Your Company Name",
+                "description": "Service Payment",
+            })
+
+        elif payment_method == 'cod':
+            if payment.payment_status != 'completed':  # Double-check for cod payments
+                payment.payment_method = 'cod'
+                payment.payment_status = 'completed'
+                payment.save()
+                return redirect('customer-dashboard')
+
+        return JsonResponse({"error": "Invalid payment method"}, status=400)
+
+
+
+
+class PaymentVerificationView(View):
+    def post(self, request, *args, **kwargs):
+        try:
+            # Parse JSON body
+            body = json.loads(request.body)
+
+            razorpay_order_id = body.get('razorpay_order_id')
+            razorpay_payment_id = body.get('razorpay_payment_id')
+            razorpay_signature = body.get('razorpay_signature')
+
+            if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature]):
+                return JsonResponse({"error": "Incomplete Razorpay parameters."}, status=400)
+
+            # Verify Razorpay signature
+            client = razorpay.Client(auth=(config('KEY_ID'), config('KEY_SECRET')))
+            client.utility.verify_payment_signature({
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_payment_id': razorpay_payment_id,
+                'razorpay_signature': razorpay_signature,
+            })
+
+            # Update payment record
+            payment = Payment.objects.get(razorpay_order_id=razorpay_order_id)
+            payment.razorpay_payment_id = razorpay_payment_id
+            payment.razorpay_signature = razorpay_signature
+            payment.payment_status = 'completed'
+            payment.save()
+
+            return JsonResponse({"message": "Payment verified successfully."})
+        except Payment.DoesNotExist:
+            return JsonResponse({"error": "Payment record not found."}, status=404)
+        except razorpay.errors.SignatureVerificationError as e:
+            return JsonResponse({"error": "Signature verification failed.", "details": str(e)}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON payload."}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": "An unexpected error occurred.", "details": str(e)}, status=400)
+
+
+class ServiceProviderHistoryView(View):
+    template_name = "provider_History.html"
+
+    def get(self, request, *args, **kwargs):
+        
+        qs = BreakdownRequest.objects.filter(
+            service_provider=request.user,status='delivered'
+        ).order_by('-created_date')
+
+        return render(request,self.template_name,{"data":qs})
+
+
+class CustomerHistoryView(View):
+    template_name = "customer_History.html"
+
+    def get(self, request, *args, **kwargs):
+        
+        qs = BreakdownRequest.objects.filter(
+            customer=request.user,status='delivered'
+        ).order_by('-created_date')
+
+        return render(request,self.template_name,{"data":qs})

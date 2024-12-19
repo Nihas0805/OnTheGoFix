@@ -1,0 +1,89 @@
+<h1>Make Payment</h1>
+<p>Amount: ₹{{ payment.amount }}</p>
+
+{% if payment.payment_status == 'completed' %}
+    <p><strong>Payment Status:</strong> Completed</p>
+    <p>No further payment is required.</p>
+{% else %}
+    <!-- Payment Method Selection Form -->
+    <form id="payment-form" method="post">
+        {% csrf_token %}
+        <label for="payment_method">Payment Method:</label>
+        <select name="payment_method" id="payment_method" required>
+            <option value="cod">Cash on Delivery</option>
+            <option value="razorpay">Razorpay</option>
+        </select>
+        <br><br>
+        <button type="submit" id="proceed-btn">Proceed</button>
+    </form>
+{% endif %}
+
+<!-- Razorpay Checkout Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.getElementById('payment-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const paymentMethod = document.getElementById('payment_method').value;
+
+    if (paymentMethod === 'razorpay') {
+        // Send request to backend to initiate Razorpay Order
+        fetch("{{ request.path }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ payment_method: 'razorpay' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error); // Show error if payment is already done or invalid method
+                return;
+            }
+
+            const options = {
+                key: data.key,
+                amount: data.amount,
+                currency: "INR",
+                name: data.name,
+                description: data.description,
+                order_id: data.order_id,
+                handler: function (response) {
+                    // After payment, send data to backend for verification
+                    fetch("{% url 'razorpay-verification' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.message) {
+                            alert(data.message); // Success message
+                            window.location.href = "/customer/dashboard/";  // Redirect after success
+                        } else if (data.error) {
+                            alert(data.error); // Error message
+                        }
+                    })
+                    .catch(err => console.error("Verification Error:", err));
+                },
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+        })
+        .catch(err => console.error("Error:", err));
+    } else {
+        // For COD, submit the form as usual
+        this.submit();
+    }
+});
+</script>

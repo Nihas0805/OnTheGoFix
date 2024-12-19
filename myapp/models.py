@@ -92,7 +92,7 @@ class BreakdownRequest(BaseModel):
 
     service_types = models.ManyToManyField(ServiceType, related_name='breakdown_requests')  
 
-    description = models.TextField()
+    description = models.TextField(null=True)
 
     image = models.ImageField(upload_to='images/', blank=True, null=True)
 
@@ -120,7 +120,6 @@ class BreakdownRequest(BaseModel):
 
 
 
-
 class Payment(BaseModel):
 
     breakdown_request = models.OneToOneField(BreakdownRequest, on_delete=models.CASCADE, related_name='payment')
@@ -141,9 +140,13 @@ class Payment(BaseModel):
 
 
     payment_status = models.CharField(max_length=20, choices=payment_status_choices, default='pending')
+
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_signature = models.CharField(max_length=255, blank=True, null=True)
     
     def __str__(self):
-        return f"Payment of {self.amount} from {self.customer.user.username} to {self.service_provider.user.username}"
+        return f" Payment of {self.amount} from {self.customer.user.username} to {self.service_provider.user.username}"
 
 
 

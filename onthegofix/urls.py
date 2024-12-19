@@ -26,17 +26,25 @@ urlpatterns = [
     path('veriify/email/', views.VerifyEmailView.as_view(),name="verify-email"),
     path('customer/index/', views.CustomerIndexView.as_view(),name="customer-index"),
     path('provider/index/', views.ProviderIndexView.as_view(),name="provider-index"),
+    path('logout/',views.LogoutView.as_view(),name='signout'),
     path("get-location/<int:request_id>/", views.ProviderIndexView.as_view(), name="get_location"),
     path('signin/', views.SignInView.as_view(),name="signin"),
     path('provider/profile/update/', views.ServiceProviderProfileEditView.as_view(),name="provider-edit"),
     
     path('provider/profile/', views.ProviderProfileView.as_view(),name="provider-profile"),
     path('create/breakdown/request/<int:service_provider_id>/',views.BreakdownRequestCreateView.as_view(), name='create-breakdownrequest'),
+    path('breakdown/details/<int:pk>/provider/',views.ProviderBreakdownRequestDetailView.as_view(), name='breakdownrequestprovider-detail'),
+    path('breakdown/details/<int:pk>/customer/',views.CustomerBreakdownRequestDetailView.as_view(), name='breakdownrequestcustomer-detail'),
     path('customer/profile/update/',views.CustomerProfileEditView.as_view(), name='customer-edit'),
     path('customer/profile/',views.CustomerProfileListView.as_view(), name='customer-profile'),
     path('breakdown/request/update/<int:pk>/',views.BreakdownRequestUpdateView.as_view(), name='breakdownrequest-edit'),
-    path('provider/dashboard/view/',views.ServiceProviderDashboardView.as_view(), name='provider-dashboard'),
+    path('provider/dashboard/',views.ServiceProviderDashboardView.as_view(), name='provider-dashboard'),
     path('set/payment/<int:pk>',views.SetPaymentAmountView.as_view(), name='set-payment'),
+    path('customer/dashboard/',views.CustomerDashboardView.as_view(), name='customer-dashboard'),
+    path('customer/pay/<int:pk>/',views.CustomerPaymentView.as_view(), name='customer-payment'),
+    path('razorpay/verify/', views.PaymentVerificationView.as_view(), name='razorpay-verification'),
+    path('provider/history/',views.ServiceProviderHistoryView.as_view(), name='provider-history'),
+    path('customer/history/',views.CustomerHistoryView.as_view(), name='customer-history'),
 ]
 if settings.DEBUG:  # Serve media files during development
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

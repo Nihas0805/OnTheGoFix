@@ -40,7 +40,7 @@ class ServiceProviderProfileForm(forms.ModelForm):
         model = ServiceProviderProfile
         fields = ['service_types', 'address', 'availability_status', 'profile_picture']
         widgets = {
-            'availability_status': forms.Select(choices=[(True, 'Yes'), (False, 'No')]),
+            'availability_status': forms.Select(choices=[(True, 'Available'), (False, 'Not Available')]),
         }
 
     def __init__(self, *args, **kwargs):

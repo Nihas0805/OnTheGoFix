@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 
+from decouple import config
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-293j6k)ld4*$6nf!77sw@j&_c54@u73&=9+hz2y4qogx&4=24!'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -139,9 +141,6 @@ EMAIL_HOST='smtp.gmail.com'
 EMAIL_USE_TLS=True
 EMAIL_PORT=587
 EMAIL_HOST_USER='nihasansin010@gmail.com'
-EMAIL_HOST_PASSWORD='cpgg ocjd czah gwih'
+EMAIL_HOST_PASSWORD=config('EMAIL_HOST_PASSWORD')
 
-TWILIO_RECOVERY_CODE="XRLCY9TMAS1DZJ6V2F6SA9F3"
-TWILIO_ACCOUNT_SID="ACf59b762f511f7abd4d7ae2872eaf9107"
-TWILIO_AUTH_TOKEN="ce219a2f217f965cdf8b7146b5441503"
-TWILIO_PHONE_NUMBER="+18777804236"
+
