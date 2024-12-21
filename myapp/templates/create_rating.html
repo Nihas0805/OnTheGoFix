@@ -1,0 +1,41 @@
+<!-- templates/create_rating.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Rating</title>
+</head>
+<body>
+    <h1>Create Rating</h1>
+
+    <!-- Service Provider Information -->
+    <p><strong>Service Provider:</strong> {{ service_provider.username }}</p>
+
+    <!-- Breakdown Request Details -->
+    <h2>Breakdown Request Details</h2>
+    <p><strong>Vehicle Type:</strong> 
+        {% for service_type in breakdown_request.service_types.all %}
+            {{ service_type.vehicle_type|capfirst }}
+        {% empty %}
+            N/A
+        {% endfor %}
+    </p>
+    <p><strong>Service Types:</strong></p>
+    <ul>
+        {% for service_type in breakdown_request.service_types.all %}
+            <li>{{ service_type.name }}</li>
+        {% empty %}
+            <li>No service types available.</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Rating Form -->
+    <h2>Submit Your Rating</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit Rating</button>
+    </form>
+</body>
+</html>

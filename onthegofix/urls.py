@@ -45,6 +45,8 @@ urlpatterns = [
     path('razorpay/verify/', views.PaymentVerificationView.as_view(), name='razorpay-verification'),
     path('provider/history/',views.ServiceProviderHistoryView.as_view(), name='provider-history'),
     path('customer/history/',views.CustomerHistoryView.as_view(), name='customer-history'),
+    path('rating/create/<int:pk>/', views.CreateRatingView.as_view(), name='create-rating'),
+    path('ratings/<int:pk>/', views.RatingListView.as_view(), name='rating_list'),
 ]
 if settings.DEBUG:  # Serve media files during development
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

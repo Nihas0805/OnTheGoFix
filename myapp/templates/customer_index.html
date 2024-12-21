@@ -17,11 +17,20 @@
     <div class="flex justify-between items-center gap-4">
       <div>
         <h3 class="text-xl lg:text-2xl font-bold text-gray-900">
-          {{ provider.user.username }}
+          {{ provider.user.username }}  a
         </h3>
 
         <p class="mt-1 text-sm font-medium text-gray-600">
           Status: {{ provider.availability_status|yesno:"Available,Not Available" }}
+        </p>
+        <p class="mt-1 text-sm font-medium text-gray-600">
+          <span>
+            Rating: {{ provider.display_stars }} ({{ provider.total_reviews }} reviews)
+        </span>
+        </p>
+
+        <p class="mt-1 text-sm font-medium text-gray-600">
+          <a href="{%url 'rating_list' provider.user.id%}">ratings</a>
         </p>
       </div>
 

@@ -1,0 +1,30 @@
+{% extends 'customer_base.html' %}
+{% block main_block %}
+{% load custom_filters %}
+<h1>Ratings for {{ service_provider.user.username }}</h1>
+    
+    {% if ratings %}
+        <ul>
+            {% for rating in ratings %}
+                <li>
+                    <strong>Rated by:</strong> {{ rating.breakdown_request.customer.username }}<br>
+                    <strong>Rating:</strong> 
+                    <span>
+                        {% for _ in rating.rating|add:"0"|range_filter %}
+                            ★
+                        {% endfor %}
+                        {% for _ in 5|add:"-rating.rating"|add:"0"|range_filter %}
+                            ☆
+                        {% endfor %}
+                    </span><br>
+                    <strong>Review:</strong> {{ rating.review|default:"No review provided." }}<br>
+                    <strong>Created on:</strong> {{ rating.created_date|date:"F j, Y, g:i a" }}
+                </li>
+                <hr>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No ratings available for this service provider.</p>
+    {% endif %}
+    
+{% endblock %}

@@ -1,6 +1,6 @@
 from django import forms
 
-from myapp.models import User,ServiceProviderProfile,ServiceType,BreakdownRequest,CustomerProfile
+from myapp.models import User,ServiceProviderProfile,ServiceType,BreakdownRequest,CustomerProfile,Rating
 
 from django.contrib.auth.forms import UserCreationForm
 
@@ -200,3 +200,9 @@ class BreakdownRequestUpdateForm(forms.ModelForm):
         for field in self.fields:
             if field not in ["status"]:
                 self.fields[field].widget.attrs["readonly"] = True
+
+
+class RatingForm(forms.ModelForm):
+    class Meta:
+        model = Rating
+        fields = ['rating', 'review']

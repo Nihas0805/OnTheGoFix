@@ -8,6 +8,7 @@ from django.db.models.signals import post_save
 
 from random import randint
 
+from math import floor
 
 class BaseModel(models.Model):
 
@@ -80,6 +81,30 @@ class ServiceProviderProfile(BaseModel):
     availability_status = models.BooleanField(default=True)  
     
     profile_picture = models.ImageField(upload_to='profilepictures/', blank=True, null=True, default="profilepictures/default.png")
+
+    total_reviews = models.PositiveIntegerField(default=0)  
+
+    average_rating = models.FloatField(default=0.0)  
+
+    def update_rating(self):
+        """Update the average rating and total reviews."""
+        ratings = Rating.objects.filter(service_provider=self.user).aggregate(
+            average=models.Avg('rating'),
+            count=models.Count('rating')
+        )
+        self.average_rating = ratings['average'] or 0.0
+        self.total_reviews = ratings['count'] or 0
+        self.save()
+    
+    
+
+    def display_stars(self):
+        full_stars = floor(self.average_rating)  # Number of full stars
+        half_star = 1 if self.average_rating - full_stars >= 0.5 else 0  # Half star logic
+        empty_stars = 5 - full_stars - half_star
+        return '★' * full_stars + '⭑' * half_star + '☆' * empty_stars
+
+
     
     def __str__(self):
         return self.user.username
@@ -156,6 +181,8 @@ class Rating(models.Model):
 
     breakdown_request = models.OneToOneField(BreakdownRequest, on_delete=models.CASCADE, related_name='rating')
 
+    service_provider = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ratings')
+
     rating = models.PositiveIntegerField(default=5)
 
     review = models.TextField(blank=True, null=True)
@@ -164,6 +191,15 @@ class Rating(models.Model):
    
     def __str__(self):
         return f"Rating for {self.service_provider.user.username}: {self.rating}"
+
+    def display_stars(self):
+        full_stars = floor(self.rating)  # Use floor from math module
+        half_star = 1 if self.rating - full_stars >= 0.5 else 0  # Half star logic
+        empty_stars = 5 - full_stars - half_star
+        return '★' * full_stars + '⭑' * half_star + '☆' * empty_stars
+
+
+
 
 
 
@@ -180,6 +216,15 @@ def create_user_profile(sender, instance, created, **kwargs):
             CustomerProfile.objects.create(user=instance)
         elif instance.role == 'provider':
             ServiceProviderProfile.objects.create(user=instance)
+
+
+@receiver(post_save, sender=Rating)
+def update_service_provider_rating(sender, instance, **kwargs):
+    service_provider_profile = instance.service_provider.provider_profile
+    service_provider_profile.update_rating()
+
+
+
 
 
 

@@ -77,15 +77,15 @@
         
         
                
-        </div>
-        {% if item.request.status == "completed" %}
         <div class="mt-6">
-            <a href="{% url 'customer-payment' item.request.id %}" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
-                Pay
-            </a>
+            {% if item.request.status == 'completed' %}
+                <a href="{% url 'customer-payment' item.request.id %}" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                    Pay
+                </a>
+            {% endif %}
         </div>
-        {%endif%}
-    </div>
+        
+    
     {% empty %}
     <p class="text-center text-gray-500">No breakdown requests available.</p>
     {% endfor %}

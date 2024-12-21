@@ -1,16 +1,19 @@
 {% extends "provider_base.html" %}
 
 {% block main_block %}
-<div class="my-12 w-screen max-w-7xl mx-auto px-4 sm:px-6 h-screen ">
+<div class="my-12 w-screen max-w-7xl mx-auto px-4 sm:px-6 h-screen">
     <h2 class="text-2xl font-bold text-gray-800 mb-6">Customer Dashboard</h2>
 
-    <a href="{%url 'customer-history'%}">Previous history</a>
+    <a href="{% url 'customer-history' %}" class="text-blue-600 underline hover:text-blue-800 mb-4 inline-block">
+        Previous history
+    </a>
 
     {% for item in data %}
-    <div class="relative block overflow-hidden rounded-lg border border-gray-100 p-4 sm:p-6 lg:p-8 mb-6">
+    <div class="relative block overflow-hidden rounded-lg border border-gray-100 p-4 sm:p-6 lg:p-8 mb-6 shadow-md">
         <span class="absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r from-green-300 via-blue-500 to-purple-600"></span>
 
-        <div class="sm:flex sm:justify-between sm:gap-4">
+        <!-- Request Header -->
+        <div class="sm:flex sm:justify-between sm:items-center sm:gap-4">
             <div>
                 <h3 class="text-lg font-bold text-gray-900 sm:text-xl">
                     Request to {{ item.request.service_provider.username }}
@@ -19,15 +22,14 @@
             </div>
         </div>
 
-        
-        <!-- Service Type Listing (by Vehicle Type) -->
+        <!-- Service Type Listing -->
         <div class="mt-4">
             <h4 class="text-sm font-bold text-gray-700">Vehicle Types and Services:</h4>
             <div>
                 {% if item.grouped_services.two_wheeler %}
                 <div>
                     <strong>Two Wheeler:</strong>
-                    <ul>
+                    <ul class="list-disc list-inside ml-4">
                         {% for service in item.grouped_services.two_wheeler %}
                         <li>{{ service.name }}</li>
                         {% endfor %}
@@ -38,7 +40,7 @@
                 {% if item.grouped_services.four_wheeler %}
                 <div>
                     <strong>Four Wheeler:</strong>
-                    <ul>
+                    <ul class="list-disc list-inside ml-4">
                         {% for service in item.grouped_services.four_wheeler %}
                         <li>{{ service.name }}</li>
                         {% endfor %}
@@ -49,7 +51,7 @@
                 {% if item.grouped_services.others %}
                 <div>
                     <strong>Others:</strong>
-                    <ul>
+                    <ul class="list-disc list-inside ml-4">
                         {% for service in item.grouped_services.others %}
                         <li>{{ service.name }}</li>
                         {% endfor %}
@@ -59,35 +61,39 @@
             </div>
         </div>
 
-       
-
-        <dl class="mt-6 flex gap-4 sm:gap-6">
-            <div class="flex flex-col-reverse">
+        <!-- Status and Updated Date -->
+        <dl class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
                 <dt class="text-sm font-medium text-gray-600">Status</dt>
                 <dd class="text-xs text-gray-500">{{ item.status }}</dd>
             </div>
-
-            <div class="flex flex-col-reverse">
+            <div>
                 <dt class="text-sm font-medium text-gray-600">Updated At</dt>
                 <dd class="text-xs text-gray-500">{{ item.request.updated_date|date:"M d, Y h:i A" }}</dd>
-            </div> 
+            </div>
         </dl>
 
         
+        <!-- Buttons: Detail and Cancel -->
+<div class="mt-6 flex gap-4">
+    <a href="{% url 'breakdownrequestcustomer-detail' item.request.id %}" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+        Detail
+    </a>
+    {% if item.status == "Pending" %}
+    <form method="post" class="inline">
+        {% csrf_token %}
+        <input type="hidden" name="request_id" value="{{ item.request.id }}">
+        <input type="hidden" name="action" value="cancel">
+        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+            Cancel
+        </button>
+    </form>
+    {% endif %}
+</div>
 
-        <!-- Get Image Button -->
-        
-        <div class="mt-6">
-            <a href="{% url 'breakdownrequestcustomer-detail' item.request.id %}" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
-                Detail
-            </a>
-               
-        </div>
-        
+    </div>
     {% empty %}
     <p class="text-center text-gray-500">No breakdown requests available.</p>
     {% endfor %}
 </div>
-
-
 {% endblock %}

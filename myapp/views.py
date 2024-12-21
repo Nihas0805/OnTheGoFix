@@ -2,7 +2,7 @@ from django.shortcuts import render,redirect,get_object_or_404
 
 from django.views.generic import View,FormView
 
-from myapp.forms import SignUpForm,SignInForm,ServiceProviderProfileForm,BreakdownRequestCreateForm,CustomerProfileForm,BreakdownRequestUpdateForm
+from myapp.forms import SignUpForm,SignInForm,ServiceProviderProfileForm,BreakdownRequestCreateForm,CustomerProfileForm,BreakdownRequestUpdateForm,RatingForm
 
 from django.core.mail import send_mail
 
@@ -10,7 +10,7 @@ from django.contrib import messages
 
 from twilio.rest import Client
 
-from myapp.models import User,BreakdownRequest,ServiceProviderProfile,BreakdownRequest,CustomerProfile,ServiceType,Payment
+from myapp.models import User,BreakdownRequest,ServiceProviderProfile,BreakdownRequest,CustomerProfile,ServiceType,Payment,Rating
 
 from django.contrib.auth import authenticate,login,logout
 
@@ -261,7 +261,7 @@ class ServiceProviderProfileEditView(View):
             profile.save()
             form_instance.save_m2m()  # Save many-to-many relationships
             print("Uploaded file:", request.FILES.get('profile_picture'))
-            return redirect("provider-index")
+            return redirect("provider-profile")
         else:
             print("Form errors:", form_instance.errors)  # Debug form errors
             print("POST Data:", request.POST)           # Debug POST data
@@ -541,7 +541,7 @@ class ServiceProviderDashboardView(View):
         }
         return render(request, self.template_name, context)
 
-from django.http import Http404 
+from django.http import Http404,HttpResponse,HttpResponseNotFound
 
 class SetPaymentAmountView(View):
     def get(self, request, *args, **kwargs):
@@ -787,3 +787,93 @@ class CustomerHistoryView(View):
         ).order_by('-created_date')
 
         return render(request,self.template_name,{"data":qs})
+
+
+
+class CreateRatingView(View):
+    def get(self, request, *args, **kwargs):
+        id = kwargs.get('pk')
+
+        # Fetch the BreakdownRequest
+        try:
+            breakdown_request = BreakdownRequest.objects.get(id=id)
+        except BreakdownRequest.DoesNotExist:
+            return HttpResponseNotFound("Breakdown Request not found.")
+
+        # Check if the breakdown request has a service provider
+        if not breakdown_request.service_provider:
+            return HttpResponse("This Breakdown Request does not have a service provider assigned.")
+
+        # Check if a rating already exists for this breakdown request
+        if Rating.objects.filter(breakdown_request=breakdown_request).exists():
+            return HttpResponse("You have already rated this service.")
+
+        # Prepare the form
+        form = RatingForm()
+
+        return render(request, 'create_rating.html', {
+            'form': form,
+            'service_provider': breakdown_request.service_provider,
+            'breakdown_request': breakdown_request,
+        })
+
+    def post(self, request, *args, **kwargs):
+        id = kwargs.get('pk')
+
+        # Fetch the BreakdownRequest
+        try:
+            breakdown_request = BreakdownRequest.objects.get(id=id)
+        except BreakdownRequest.DoesNotExist:
+            return HttpResponseNotFound("Breakdown Request not found.")
+
+        # Check if the breakdown request has a service provider
+        if not breakdown_request.service_provider:
+            return HttpResponse("This Breakdown Request does not have a service provider assigned.")
+
+        # Process the form
+        form = RatingForm(request.POST)
+        if form.is_valid():
+            # Save the rating
+            rating = form.save(commit=False)
+            rating.breakdown_request = breakdown_request
+            rating.service_provider = breakdown_request.service_provider
+            rating.save()
+
+            # Update the service provider's profile
+            try:
+                service_provider_profile = ServiceProviderProfile.objects.get(user=breakdown_request.service_provider)
+                service_provider_profile.update_rating()
+            except ServiceProviderProfile.DoesNotExist:
+                return HttpResponse("Service provider profile not found.")
+
+            return redirect('customer-history')  # Replace with your desired redirect path
+        else:
+            return render(request, 'create_rating.html', {
+                'form': form,
+                'service_provider': breakdown_request.service_provider,
+                'breakdown_request': breakdown_request,
+            })
+
+
+
+
+
+class RatingListView(View):
+    def get(self, request, *args, **kwargs):
+        service_provider_id = kwargs.get('pk')  # Extract `pk` from URL
+
+        # Fetch the ServiceProviderProfile using the `user_id` (pk in this case)
+        try:
+            service_provider = ServiceProviderProfile.objects.get(user_id=service_provider_id)  
+        except ServiceProviderProfile.DoesNotExist:
+            return HttpResponseNotFound("Service Provider not found.")
+
+        # Fetch all ratings for this service provider
+        ratings = Rating.objects.filter(service_provider_id=service_provider_id).select_related('breakdown_request__customer')
+
+        return render(request, 'rating_list.html', {
+            'service_provider': service_provider,
+            'ratings': ratings,
+        })
+
+
