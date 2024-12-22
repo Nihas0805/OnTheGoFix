@@ -1,13 +1,6 @@
-<!-- templates/create_rating.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Rating</title>
-</head>
-<body>
-    <h1>Create Rating</h1>
+{%extends 'customer_base.html'%}
+{%block main_block%}
+<h1>Create Rating</h1>
 
     <!-- Service Provider Information -->
     <p><strong>Service Provider:</strong> {{ service_provider.username }}</p>
@@ -37,5 +30,4 @@
         {{ form.as_p }}
         <button type="submit">Submit Rating</button>
     </form>
-</body>
-</html>
+{%endblock%}

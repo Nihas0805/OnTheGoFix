@@ -1,3 +1,5 @@
+{%extends 'customer_base.html'%}
+{%block main_block%}
 <h1>Make Payment</h1>
 <p>Amount: ₹{{ payment.amount }}</p>
 
@@ -87,3 +89,5 @@ document.getElementById('payment-form').addEventListener('submit', function(even
     }
 });
 </script>
+
+{%endblock%}

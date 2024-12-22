@@ -1,3 +1,5 @@
+{%extends 'provider_base.html'%}
+{%block main_block%}
 <h1>Set Payment Amount</h1>
 <p>Breakdown Request ID: {{ breakdown_request.id }}</p>
 
@@ -15,3 +17,4 @@
         <button type="submit">Submit</button>
     </form>
 {% endif %}
+{%endblock%}

@@ -58,18 +58,13 @@
     </div>
 
     <!-- Location Section -->
-<div class="mb-4">
-  <button 
-  class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
-  onclick="showLocation('{{ item.request.id }}', {{ item.request.latitude }}, {{ item.request.longitude }})">
-  Get Location
-</button>
-<p id="location-{{ item.request.id }}" class="text-gray-600 mt-2" style="display: none;">
-  <!-- Location details will be dynamically populated here -->
-</p>
-
-</div>
-
+    <div class="mb-4">
+      <button 
+        class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
+        onclick="redirectToMap({{ item.request.latitude }}, {{ item.request.longitude }})">
+        Get Location
+      </button>
+    </div>
 
     <!-- Actions -->
     <form method="post">
@@ -102,21 +97,14 @@
     imageElement.classList.toggle('zoomed');
   }
 
-  function showLocation(requestId, latitude, longitude) {
-  const locationElement = document.getElementById(`location-${requestId}`);
-
-  if (locationElement.style.display === "none" || !locationElement.style.display) {
+  function redirectToMap(latitude, longitude) {
     if (latitude && longitude) {
-      locationElement.textContent = `Latitude: ${latitude}, Longitude: ${longitude}`;
+      const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+      window.open(googleMapsUrl, '_blank'); // Open Google Maps in a new tab
     } else {
-      locationElement.textContent = "Location data not available.";
+      alert("Location data not available.");
     }
-    locationElement.style.display = "block";
-  } else {
-    locationElement.style.display = "none";
   }
-}
-
 </script>
 
 <style>
@@ -125,4 +113,4 @@
     transition: transform 0.3s ease-in-out;
   }
 </style>
-{% endblock %}                             
+{% endblock %}

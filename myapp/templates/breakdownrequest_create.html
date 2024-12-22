@@ -1,6 +1,8 @@
+{% extends 'customer_base.html' %}
+{% block main_block %}
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    
+
     <div class="form-group">
         {{ form.service_provider_username.label_tag }}
         {{ form.service_provider_username }}
@@ -48,12 +50,13 @@
 
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>
+
 <script>
     document.getElementById('get-location').addEventListener('click', function () {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 function (position) {
-                    // Get latitude and longitude from Geolocation API
+                    // Extract latitude and longitude
                     const latitude = position.coords.latitude;
                     const longitude = position.coords.longitude;
 
@@ -62,10 +65,10 @@
                     const longitudeField = document.querySelector('#id_longitude');
 
                     if (latitudeField && longitudeField) {
-                        // Set values to input fields
+                        // Set the values to input fields
                         latitudeField.value = latitude;
                         longitudeField.value = longitude;
-                        alert("Location fetched successfully!");
+                        alert("Location fetched successfully!\nLatitude: " + latitude + "\nLongitude: " + longitude);
                     } else {
                         alert("Latitude or Longitude field not found in the form.");
                     }
@@ -86,6 +89,11 @@
                             alert("An unknown error occurred.");
                             break;
                     }
+                },
+                {
+                    enableHighAccuracy: true, // Use GPS for maximum accuracy
+                    timeout: 10000,         // 10-second timeout for fetching location
+                    maximumAge: 0           // Prevent cached results
                 }
             );
         } else {
@@ -93,3 +101,4 @@
         }
     });
 </script>
+{% endblock %}

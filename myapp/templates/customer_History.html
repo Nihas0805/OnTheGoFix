@@ -27,44 +27,24 @@
             </div>
         </div>
 
-        <!-- Service Type Listing (by Vehicle Type) -->
-        <div class="mt-4">
-            <h4 class="text-sm font-bold text-gray-700">Vehicle Types and Services:</h4>
-            <div class="mt-2">
-                {% if item.grouped_services.two_wheeler %}
-                <div class="mt-2">
-                    <strong>Two Wheeler:</strong>
-                    <ul class="list-disc pl-4">
-                        {% for service in item.grouped_services.two_wheeler %}
-                        <li>{{ service.name }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-
-                {% if item.grouped_services.four_wheeler %}
-                <div class="mt-2">
-                    <strong>Four Wheeler:</strong>
-                    <ul class="list-disc pl-4">
-                        {% for service in item.grouped_services.four_wheeler %}
-                        <li>{{ service.name }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-
-                {% if item.grouped_services.others %}
-                <div class="mt-2">
-                    <strong>Others:</strong>
-                    <ul class="list-disc pl-4">
-                        {% for service in item.grouped_services.others %}
-                        <li>{{ service.name }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-            </div>
+         <!-- Service Type Listing (by Vehicle Type) -->
+<div class="mt-4">
+    <h4 class="text-sm font-bold text-gray-700">Vehicle Types and Services:</h4>
+    <div class="mt-2">
+        {% if item.service_types.exists %}
+        {% for service in item.service_types.all %}
+        <div class="mt-2">
+            <strong>{{ service.vehicle_type|capfirst }}</strong>
+            <ul class="list-disc pl-4">
+                <li>{{ service.name }}</li>
+            </ul>
         </div>
+        {% endfor %}
+        {% else %}
+        <p class="text-gray-500">No services available.</p>
+        {% endif %}
+    </div>
+</div>
 
         <!-- Status and Delivered At -->
         <dl class="mt-6 flex flex-col sm:flex-row gap-4 sm:gap-6">
@@ -80,11 +60,7 @@
         </dl>
 
         <!-- Get Image Button -->
-        <div class="mt-6">
-            <a href="{% url 'breakdownrequestcustomer-detail' item.id %}" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
-                Detail
-            </a>
-        </div>
+        
 
     </div>
     {% empty %}

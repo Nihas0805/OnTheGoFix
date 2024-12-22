@@ -113,11 +113,11 @@ class BreakdownRequest(BaseModel):
     
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='breakdown_requests')
 
-    service_provider = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='assigned_requests')
+    service_provider = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assigned_requests')
 
     service_types = models.ManyToManyField(ServiceType, related_name='breakdown_requests')  
 
-    description = models.TextField(null=True)
+    description = models.TextField(null=True,blank=True)
 
     image = models.ImageField(upload_to='images/', blank=True, null=True)
 

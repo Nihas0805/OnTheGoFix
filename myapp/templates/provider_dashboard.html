@@ -3,6 +3,16 @@
 {% block main_block %}
 <div class="my-12 w-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-screen">
     <h2 class="text-2xl font-bold text-gray-800 mb-6">Service Provider Dashboard</h2>
+    <form action="" method="get" >
+        <select name="status" id="" class="form-select bg-light text-dark mx-2" onchange="this.form.submit()">
+            <option value="all" {%if selected == "all"%} selected {%endif%}>All</option>
+            <option value="accepted" {%if selected == "accepted"%} selected {%endif%}>Accepted</option>
+            <option value="pick_up" {%if selected == "pick_up"%} selected {%endif%}>Picked Up</option>
+            <option value="in_progress" {%if selected == "in_progress"%} selected {%endif%}>In Progress</option>
+            <option value="completed" {%if selected == "completed "%} selected {%endif%}>Completed</option>
+            <!-- <option value="cancelled" {%if selected == "cancelled "%} selected {%endif%}>Cancelled</option> -->
+
+        </select>
 
     <a href="{% url 'provider-history' %}" class="text-blue-600 hover:underline mb-4 block">Previous History</a>
 

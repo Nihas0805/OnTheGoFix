@@ -22,6 +22,8 @@ from decouple import config
 
 from django.http import JsonResponse
 
+from django.contrib import messages
+
 
 
 
@@ -185,8 +187,10 @@ class ProviderIndexView(View):
         if breakdown_request:
             if action == "accept":
                 breakdown_request.status = "accepted"
+                messages.success(request,"Service Accepted")
             elif action == "cancel":
                 breakdown_request.status = "cancelled"
+                messages.error(request,"Service Rejected")
             breakdown_request.save()
 
         # Redirect back to the updated view
@@ -259,10 +263,13 @@ class ServiceProviderProfileEditView(View):
             profile = form_instance.save(commit=False)
             profile.user = request.user  # Explicitly link the profile to the user
             profile.save()
-            form_instance.save_m2m()  # Save many-to-many relationships
+            form_instance.save_m2m() 
+            messages.success(request,"Updated Successfully") # Save many-to-many relationships
             print("Uploaded file:", request.FILES.get('profile_picture'))
+            
             return redirect("provider-profile")
         else:
+            messages.error(request,"Error Updating")
             print("Form errors:", form_instance.errors)  # Debug form errors
             print("POST Data:", request.POST)           # Debug POST data
             print("FILES Data:", request.FILES)         # Debug FILE data
@@ -336,6 +343,7 @@ class BreakdownRequestCreateView(LoginRequiredMixin, View):
             breakdown_request.customer = request.user
             breakdown_request.service_provider = service_provider.user
             breakdown_request.save()
+            messages.success(request,"Request send")
             form.save_m2m()
 
             # Update customer address
@@ -354,32 +362,30 @@ class ProviderBreakdownRequestDetailView(View):
     def get(self, request, *args, **kwargs):
         id = kwargs.get("pk")
 
-        # Fetch a single BreakdownRequest object
+        # Fetch the BreakdownRequest instance
         try:
             request_instance = BreakdownRequest.objects.get(id=id)
         except BreakdownRequest.DoesNotExist:
             return render(request, self.template_name, {"error": "Breakdown request not found."})
 
-        try:
-            # Group services under vehicle types
-            grouped_services = {
-                'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
-                'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
-                'others': request_instance.service_types.filter(vehicle_type='others'),
-            }
-        except ServiceType.DoesNotExist:
-            grouped_services = None
+        # Fetch payment details
+        payment = Payment.objects.filter(breakdown_request=request_instance).first()
+
+        # Group services under vehicle types
+        grouped_services = {
+            'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
+            'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
+            'others': request_instance.service_types.filter(vehicle_type='others'),
+        }
 
         # Prepare context data for the template
-        breakdown_data = {
+        context = {
             "request": request_instance,
             "grouped_services": grouped_services,
-        }
-
-        context = {
-            "data": [breakdown_data],  # Wrap in a list to maintain template structure
+            "payment": payment,  # Include payment details in context
         }
         return render(request, self.template_name, context)
+
 
 class CustomerBreakdownRequestDetailView(View):
     template_name = "breakdownrequest_customer_detail.html"
@@ -387,30 +393,27 @@ class CustomerBreakdownRequestDetailView(View):
     def get(self, request, *args, **kwargs):
         id = kwargs.get("pk")
 
-        # Fetch a single BreakdownRequest object
+        # Fetch the BreakdownRequest instance
         try:
             request_instance = BreakdownRequest.objects.get(id=id)
         except BreakdownRequest.DoesNotExist:
             return render(request, self.template_name, {"error": "Breakdown request not found."})
 
-        try:
-            # Group services under vehicle types
-            grouped_services = {
-                'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
-                'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
-                'others': request_instance.service_types.filter(vehicle_type='others'),
-            }
-        except ServiceType.DoesNotExist:
-            grouped_services = None
+        # Fetch payment details
+        payment = Payment.objects.filter(breakdown_request=request_instance).first()
 
-        # Prepare context data for the template
-        breakdown_data = {
-            "request": request_instance,
-            "grouped_services": grouped_services,
+        # Group services under vehicle types
+        grouped_services = {
+            'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
+            'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
+            'others': request_instance.service_types.filter(vehicle_type='others'),
         }
 
+        # Prepare context data for the template
         context = {
-            "data": [breakdown_data],  # Wrap in a list to maintain template structure
+            "request": request_instance,
+            "grouped_services": grouped_services,
+            "payment": payment,  # Include payment details in context
         }
         return render(request, self.template_name, context)
 
@@ -439,7 +442,8 @@ class CustomerProfileEditView(View):
 
         if form_instance.is_valid():
             form_instance.save()
-            return redirect("customer-index")
+            messages.success(request,"Updated Successfully")
+            return redirect("customer-profile")
 
         return render(request, self.template_name, {"form": form_instance})
 
@@ -501,6 +505,7 @@ class BreakdownRequestUpdateView(View):
                 updated_request.completed_at = None
 
             updated_request.save()
+            messages.success(request,"Updated Successfully")
             return redirect('provider-dashboard')
               # Redirect to the list view or wherever you want
 
@@ -514,9 +519,19 @@ class ServiceProviderDashboardView(View):
 
     def get(self, request, *args, **kwargs):
         # Fetch all breakdown requests except 'pending', 'cancelled', and 'completed' statuses for the current user
-        qs = BreakdownRequest.objects.filter(
+        
+        selected_status=request.GET.get("status","all")
+
+    
+        if selected_status =="all":
+                
+            qs = BreakdownRequest.objects.filter(
             service_provider=request.user
-        ).exclude(status__in=['delivered','cancelled']).order_by('-created_date')
+        ).exclude(status__in=['delivered','pending','cancelled']).order_by('-created_date')
+            
+        else:
+                
+            qs=BreakdownRequest.objects.filter(status=selected_status,service_provider=request.user).order_by('-created_date')
 
         breakdown_data = []
         for request_instance in qs:
@@ -538,6 +553,7 @@ class ServiceProviderDashboardView(View):
 
         context = {
             "data": breakdown_data,
+            "selected":selected_status,
         }
         return render(request, self.template_name, context)
 
@@ -606,6 +622,7 @@ class SetPaymentAmountView(View):
         if not created:  # Update the amount if Payment already exists
             payment.amount = int(amount)
             payment.save()
+            messages.success(request,"Payment initiated successfully")
 
         return redirect('provider-dashboard')  # Redirect to the next page
 
@@ -615,9 +632,20 @@ class CustomerDashboardView(View):
 
     def get(self, request, *args, **kwargs):
         # Fetch all breakdown requests except 'pending', 'cancelled', and 'completed' statuses for the current user
-        qs = BreakdownRequest.objects.filter(
+        
+
+        selected_status=request.GET.get("status","all")
+
+    
+        if selected_status =="all":
+                
+            qs = BreakdownRequest.objects.filter(
             customer=request.user
-        ).exclude(status__in=['delivered']).order_by('-created_date')
+        ).exclude(status__in=['delivered','cancelled']).order_by('-created_date')
+            
+        else:
+                
+            qs=BreakdownRequest.objects.filter(status=selected_status,customer=request.user).order_by('-created_date')
 
         breakdown_data = []
         for request_instance in qs:
@@ -639,7 +667,10 @@ class CustomerDashboardView(View):
 
         context = {
             "data": breakdown_data,
+            "selected":selected_status
         }
+        
+
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
@@ -653,6 +684,7 @@ class CustomerDashboardView(View):
             if action == "cancel":
                 breakdown_request.status = "cancelled"
                 breakdown_request.save()
+                messages.error(request,"Cancelled")
 
         # Redirect back to the updated view
         return self.get(request, *args, **kwargs)
@@ -705,6 +737,8 @@ class CustomerPaymentView(View):
             payment.payment_method = 'razorpay'
             payment.razorpay_order_id = razorpay_order['id']
             payment.save()
+            messages.success(request,"Payment Successfully Completed")
+
 
             return JsonResponse({
                 "key": config('KEY_ID'),
@@ -719,6 +753,9 @@ class CustomerPaymentView(View):
                 payment.payment_method = 'cod'
                 payment.payment_status = 'completed'
                 payment.save()
+                messages.success(request,"Payment Successfully Completed")
+
+                
                 return redirect('customer-dashboard')
 
         return JsonResponse({"error": "Invalid payment method"}, status=400)
@@ -838,6 +875,8 @@ class CreateRatingView(View):
             rating.breakdown_request = breakdown_request
             rating.service_provider = breakdown_request.service_provider
             rating.save()
+            messages.success(request,"Service has been rated")
+
 
             # Update the service provider's profile
             try:
