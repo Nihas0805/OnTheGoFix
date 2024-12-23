@@ -1,6 +1,7 @@
 {%extends 'customer_base.html'%}
 {%block main_block%}
-<h1>Make Payment</h1>
+<h1>Make Payment </h1>
+<p>Payment To: {{ breakdown_request.service_provider.username }}</p>
 <p>Amount: ₹{{ payment.amount }}</p>
 
 {% if payment.payment_status == 'completed' %}

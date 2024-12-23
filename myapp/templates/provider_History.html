@@ -51,18 +51,32 @@
 </div>
 
 
-        <!-- Status and Delivered At -->
-        <dl class="mt-6 flex flex-col sm:flex-row gap-4 sm:gap-6">
-            <div class="flex flex-col">
-                <dt class="text-sm font-medium text-gray-600">Status</dt>
-                <dd class="text-xs text-gray-500">{{ item.status }}</dd>
-            </div>
-
-            <div class="flex flex-col">
-                <dt class="text-sm font-medium text-gray-600">Delivered At</dt>
-                <dd class="text-xs text-gray-500">{{ item.completed_at|date:"M d, Y h:i A" }}</dd>
-            </div>
-        </dl>
+<div class="flex flex-col">
+    <dl>
+        <dt class="text-sm font-medium text-gray-600">Delivered At</dt>
+        <dd class="text-xs text-gray-500">{{ item.updated_date|date:"M d, Y h:i A" }}</dd>
+    </dl>
+    {% if item.payment %}
+    <dl class="mt-2">
+        <dt class="text-sm font-medium text-gray-600">Payment Method</dt>
+        <dd class="text-xs text-gray-500">
+            
+                {{ item.payment.payment_method|capfirst }}
+            
+           
+        </dd>
+    </dl>
+    <dl class="mt-2">
+        <dt class="text-sm font-medium text-gray-600">Payment Amount</dt>
+        <dd class="text-xs text-gray-500">
+            
+                {{ item.payment.amount }}
+            
+           
+        </dd>
+    </dl>
+    {% endif %}
+</div>
 
         
 

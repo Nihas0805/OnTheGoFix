@@ -478,7 +478,7 @@ class BreakdownRequestUpdateView(View):
         return render(request, self.template_name, {"form": form, "breakdown_request": breakdown_request})
 
     def post(self, request, *args, **kwargs):
-        # Get the pk from kwargs and use it to fetch the breakdown request
+    # Get the pk from kwargs and use it to fetch the breakdown request
         pk = kwargs.get('pk')
         try:
             # Fetch the breakdown request object using pk
@@ -491,6 +491,18 @@ class BreakdownRequestUpdateView(View):
 
         if form.is_valid():
             updated_request = form.save(commit=False)
+
+            # Ensure all other fields retain their original values
+            updated_request.customer = breakdown_request.customer
+            updated_request.service_provider = breakdown_request.service_provider
+            updated_request.description = breakdown_request.description
+            updated_request.image = breakdown_request.image
+            updated_request.latitude = breakdown_request.latitude
+            updated_request.longitude = breakdown_request.longitude
+
+            # Update status if it's changed
+            updated_request.status = form.cleaned_data["status"]
+            updated_request.estimated_date = form.cleaned_data["estimated_date"]
 
             # Check which button was clicked (Take Action or Cancel)
             if 'take_action' in request.POST:
@@ -505,14 +517,15 @@ class BreakdownRequestUpdateView(View):
                 updated_request.completed_at = None
 
             updated_request.save()
-            messages.success(request,"Updated Successfully")
-            return redirect('provider-dashboard')
-              # Redirect to the list view or wherever you want
+            messages.success(request, "Updated Successfully")
+            return redirect('provider-dashboard')  # Redirect to the list view or wherever you want
 
-        return render(request, self.template_name, {"form": form, "breakdown_request": breakdown_request})
- 
-
-
+        # Include errors in the context if the form is not valid
+        return render(request, self.template_name, {
+            "form": form,
+            "breakdown_request": breakdown_request,
+            "form_errors": form.errors,  # Add errors to the context
+        })
 
 class ServiceProviderDashboardView(View):
     template_name = "provider_dashboard.html"
@@ -809,7 +822,7 @@ class ServiceProviderHistoryView(View):
         
         qs = BreakdownRequest.objects.filter(
             service_provider=request.user,status='delivered'
-        ).order_by('-created_date')
+        ).select_related('payment').order_by('-created_date')
 
         return render(request,self.template_name,{"data":qs})
 
@@ -818,12 +831,12 @@ class CustomerHistoryView(View):
     template_name = "customer_History.html"
 
     def get(self, request, *args, **kwargs):
-        
         qs = BreakdownRequest.objects.filter(
-            customer=request.user,status='delivered'
-        ).order_by('-created_date')
+            customer=request.user, status='delivered'
+        ).select_related('payment').order_by('-created_date')
 
-        return render(request,self.template_name,{"data":qs})
+        return render(request, self.template_name, {"data": qs})
+
 
 
 

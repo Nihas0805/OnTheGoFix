@@ -5,9 +5,57 @@
 
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
 
-    <button type="submit" class="btn btn-primary">Save Changes</button>
-    <a href="{% url 'provider-index' %}" class="btn btn-secondary">Cancel</a>
+    <!-- Readonly text input for Customer -->
+    <div class="form-group">
+        Service To : {{breakdown_request.customer.username}}
+    </div>
+
+    <!-- Hidden inputs for other fields -->
+    <input type="hidden" name="service_provider" value="{{ form.service_provider.value }}">
+    <input type="hidden" name="customer" value="{{ form.customer.value }}">
+    <input type="hidden" name="description" value="{{ form.description.value }}">
+    <input type="hidden" name="image" value="{{ form.image.value }}">
+    <input type="hidden" name="latitude" value="{{ form.latitude.value }}">
+    <input type="hidden" name="longitude" value="{{ form.longitude.value }}">
+
+    <!-- Readonly display for Service Types -->
+    <div class="form-group">
+        <label for="service_types_display">Service Types</label>
+        <textarea id="service_types_display" class="form-control" readonly>{{ form.service_types_display.value }}</textarea>
+    </div>
+
+    <!-- Editable Status Dropdown -->
+    <div class="form-group">
+        <label for="status">Status</label>
+        {{ form.status }}
+    </div>
+
+    <div class="form-group">
+        <label for="estimated_date">Estimated Date</label>
+        {{ form.estimated_date }}
+    </div>
+
+    <!-- Action buttons -->
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{% url 'provider-index' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+    {% if form_errors %}
+<div class="alert alert-danger">
+    <ul>
+        {% for field, errors in form_errors.items %}
+            <li><strong>{{ field }}:</strong>
+                <ul>
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
 </form>
-{% endblock %}
+{% endblock %}          

@@ -177,6 +177,11 @@ class CustomerProfileForm(forms.ModelForm):
 
 
 class BreakdownRequestUpdateForm(forms.ModelForm):
+    service_types_display = forms.CharField(
+        label="Service Types",
+        required=False,
+        widget=forms.Textarea(attrs={"class": "form-control", "readonly": "readonly"})
+    )
 
     class Meta:
         model = BreakdownRequest
@@ -186,20 +191,31 @@ class BreakdownRequestUpdateForm(forms.ModelForm):
             "description",
             "image",
             "status",
+            "latitude",
+            "longitude",
+            "estimated_date",
         ]
         widgets = {
-            "status": forms.Select(attrs={"class": "form-control"}),
-            "description": forms.Textarea(attrs={"class": "form-control", "readonly": "readonly"}),
-            "image": forms.ClearableFileInput(attrs={"disabled": "true"}),
-            "customer": forms.TextInput(attrs={"class": "form-control", "readonly": "readonly"}),
-            "service_provider": forms.TextInput(attrs={"class": "form-control", "readonly": "readonly"}),
+            "customer": forms.HiddenInput(),  # Readonly Text Input
+            "status": forms.Select(attrs={"class": "form-control"}),  # Editable
+            "description": forms.HiddenInput(),  # Hidden
+            "image": forms.HiddenInput(),  # Hidden
+            "service_provider": forms.HiddenInput(),  # Hidden
+            "latitude": forms.HiddenInput(),  # Hidden
+            "longitude": forms.HiddenInput(),  # Hidden
+            "estimated_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
         }
-
+        
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields:
-            if field not in ["status"]:
-                self.fields[field].widget.attrs["readonly"] = True
+
+        # Combine vehicle type and service type for display
+        if self.instance and self.instance.pk:
+            service_types_display_text = "\n".join(
+                f"{st.get_vehicle_type_display()} : {st.name}"
+                for st in self.instance.service_types.all()
+            )
+            self.fields["service_types_display"].initial = service_types_display_text
 
 
 class RatingForm(forms.ModelForm):

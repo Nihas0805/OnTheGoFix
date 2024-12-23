@@ -14,7 +14,11 @@
     <div class="flex items-center gap-4">
       <h3 class="text-lg font-bold text-gray-900 sm:text-xl">
         {{ profile.user.username }}
+        
       </h3>
+      <p class="mt-1 text-sm font-medium text-gray-600">
+        Status: {{ profile.availability_status|yesno:"Available,Not Available" }}
+      </p>
       
 
       <!-- Update Profile Button -->
@@ -26,7 +30,7 @@
 
     <p class="mt-1 text-sm font-medium text-gray-600">
       <span>
-        Rating: {{ profile.display_stars }} ({{ profile.total_reviews }} reviews)
+        Rating: {{ profile.display_stars }} ({{ profile.total_reviews }} reviews)<a href="{%url 'rating_list' profile.user.id%}">view ratings</a>
     </span>
     </p>
 

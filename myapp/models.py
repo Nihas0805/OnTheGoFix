@@ -137,6 +137,8 @@ class BreakdownRequest(BaseModel):
 
     longitude = models.FloatField(blank=True,null=True)
 
+    estimated_date = models.DateField(null=True, blank=True)
+
     completed_at = models.DateTimeField(blank=True, null=True)
 
 

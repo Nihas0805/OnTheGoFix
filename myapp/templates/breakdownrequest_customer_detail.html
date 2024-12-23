@@ -58,6 +58,14 @@
                 <dt class="text-sm font-medium text-gray-600">Updated At</dt>
                 <dd class="text-xs text-gray-500">{{ request.updated_date|date:"M d, Y h:i A" }}</dd>
             </div> 
+            {%if request.status == "completed"%}
+            <div class="flex flex-col-reverse">
+                {%if payment%}
+                <dt class="text-sm font-medium text-gray-600">Payment status</dt>
+                <dd class="text-xs text-gray-500">{{ payment.payment_status }}</dd>
+                {%endif%}
+            </div> 
+            {%endif%}
         </dl>
 
        
@@ -84,10 +92,11 @@
                      Pay
                 </a>
                 {% else %}
-                <p class="text-green-600 font-bold">Payment already completed.</p>
+                <p class="text-green-600 font-bold"></p>
                 {% endif %}
             {% else %}
             <p class="text-red-600 font-bold">No payment initiated for this request.</p>
+
             {% endif %}
         </div>
         {%endif%}
