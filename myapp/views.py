@@ -2,7 +2,7 @@ from django.shortcuts import render,redirect,get_object_or_404
 
 from django.views.generic import View,FormView
 
-from myapp.forms import SignUpForm,SignInForm,ServiceProviderProfileForm,BreakdownRequestCreateForm,CustomerProfileForm,BreakdownRequestUpdateForm,RatingForm
+from myapp.forms import SignUpForm,SignInForm,ServiceProviderProfileForm,BreakdownRequestCreateForm,CustomerProfileForm,BreakdownRequestUpdateForm,RatingForm,PasswordResetForm
 
 from django.core.mail import send_mail
 
@@ -23,6 +23,16 @@ from decouple import config
 from django.http import JsonResponse
 
 from django.contrib import messages
+
+from django.utils.decorators import method_decorator
+
+from django.views.decorators.cache import never_cache
+
+from myapp.decorators import signin_required
+
+
+
+decs=[signin_required,never_cache]
 
 
 
@@ -60,6 +70,7 @@ def send_otp_email(user):
 
 
 
+
 class SignUpView(View):
 
     template_name="register.html"
@@ -91,6 +102,8 @@ class SignUpView(View):
             return redirect("verify-email")
         
         return render(request,self.template_name,{"form":form_instance})
+
+
 
 class VerifyEmailView(View):
 
@@ -127,6 +140,7 @@ class VerifyEmailView(View):
 
 
 
+@method_decorator(decs,name="dispatch")
 
 class CustomerIndexView(View):
     template_name = "customer_index.html"
@@ -145,7 +159,7 @@ class CustomerIndexView(View):
 
 
         
-
+@method_decorator(decs,name="dispatch")
 class ProviderIndexView(View):
     template_name = "provider_index.html"
 
@@ -229,6 +243,8 @@ class SignInView(FormView):
                 form_instance.add_error(None, "Invalid username or password")
         return render(request, self.template_name, {'form': form_instance})
 
+
+@method_decorator(decs,name="dispatch")
 class LogoutView(View):
     
     def get(self,request,*args,**kwargs):
@@ -240,7 +256,7 @@ class LogoutView(View):
 
 
 
-
+@method_decorator(decs,name="dispatch")
 class ServiceProviderProfileEditView(View):
     template_name = "provider_profile_edit.html"
     form_class = ServiceProviderProfileForm
@@ -280,13 +296,8 @@ class ServiceProviderProfileEditView(View):
 
 
 
-
-
-
-from django.contrib.auth.mixins import LoginRequiredMixin
-
-
-class ProviderProfileView(LoginRequiredMixin, View):
+@method_decorator(decs,name="dispatch")
+class ProviderProfileView(View):
     template_name = "provider_profile.html"
 
     def get(self, request, *args, **kwargs):
@@ -315,8 +326,8 @@ class ProviderProfileView(LoginRequiredMixin, View):
    
 
 
-
-class BreakdownRequestCreateView(LoginRequiredMixin, View):
+@method_decorator(decs,name="dispatch")
+class BreakdownRequestCreateView(View):
     template_name = 'breakdownrequest_create.html'
 
     def get(self, request, *args, **kwargs):
@@ -356,6 +367,9 @@ class BreakdownRequestCreateView(LoginRequiredMixin, View):
 
         return render(request, self.template_name, {'form': form, 'service_provider': service_provider})
 
+
+
+@method_decorator(decs,name="dispatch")
 class ProviderBreakdownRequestDetailView(View):
     template_name = "breakdownrequest_provider_detail.html"
 
@@ -387,6 +401,8 @@ class ProviderBreakdownRequestDetailView(View):
         return render(request, self.template_name, context)
 
 
+
+@method_decorator(decs,name="dispatch")
 class CustomerBreakdownRequestDetailView(View):
     template_name = "breakdownrequest_customer_detail.html"
 
@@ -420,7 +436,7 @@ class CustomerBreakdownRequestDetailView(View):
           
 
 
-
+@method_decorator(decs,name="dispatch")
 class CustomerProfileEditView(View):
     template_name = 'customer_profile_edit.html'
 
@@ -447,6 +463,9 @@ class CustomerProfileEditView(View):
 
         return render(request, self.template_name, {"form": form_instance})
 
+
+
+@method_decorator(decs,name="dispatch")
 class CustomerProfileListView(View):
     
     template_name="customer_profile.html"
@@ -458,8 +477,11 @@ class CustomerProfileListView(View):
         return render(request,self.template_name,{"data":qs})
 
 
+
 from django.utils.timezone import now
 
+
+@method_decorator(decs,name="dispatch")
 class BreakdownRequestUpdateView(View):
     template_name = "breakdownrequest_edit.html"
 
@@ -484,7 +506,7 @@ class BreakdownRequestUpdateView(View):
             # Fetch the breakdown request object using pk
             breakdown_request = BreakdownRequest.objects.get(pk=pk)
         except BreakdownRequest.DoesNotExist:
-            return redirect("provider-index")  # Redirect if not found
+            return redirect("provider-dashboard")  # Redirect if not found
 
         # Initialize the form with POST data
         form = BreakdownRequestUpdateForm(request.POST, request.FILES, instance=breakdown_request)
@@ -492,11 +514,14 @@ class BreakdownRequestUpdateView(View):
         if form.is_valid():
             updated_request = form.save(commit=False)
 
+            # Retain original image if no new image is uploaded
+            if not form.cleaned_data.get("image"):
+                updated_request.image = breakdown_request.image
+
             # Ensure all other fields retain their original values
             updated_request.customer = breakdown_request.customer
             updated_request.service_provider = breakdown_request.service_provider
             updated_request.description = breakdown_request.description
-            updated_request.image = breakdown_request.image
             updated_request.latitude = breakdown_request.latitude
             updated_request.longitude = breakdown_request.longitude
 
@@ -527,6 +552,8 @@ class BreakdownRequestUpdateView(View):
             "form_errors": form.errors,  # Add errors to the context
         })
 
+
+@method_decorator(decs,name="dispatch")
 class ServiceProviderDashboardView(View):
     template_name = "provider_dashboard.html"
 
@@ -570,8 +597,11 @@ class ServiceProviderDashboardView(View):
         }
         return render(request, self.template_name, context)
 
+
+
 from django.http import Http404,HttpResponse,HttpResponseNotFound
 
+@method_decorator(decs,name="dispatch")
 class SetPaymentAmountView(View):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get('pk')  # Retrieve the primary key from URL
@@ -640,6 +670,8 @@ class SetPaymentAmountView(View):
         return redirect('provider-dashboard')  # Redirect to the next page
 
 
+
+@method_decorator(decs,name="dispatch")
 class CustomerDashboardView(View):
     template_name = "customer_dashboard.html"
 
@@ -702,10 +734,12 @@ class CustomerDashboardView(View):
         # Redirect back to the updated view
         return self.get(request, *args, **kwargs)
 
+
 import razorpay
 
 import json
 
+@method_decorator(decs,name="dispatch")
 class CustomerPaymentView(View):
     template_name = 'customer_payment.html'
 
@@ -775,7 +809,7 @@ class CustomerPaymentView(View):
 
 
 
-
+@method_decorator(decs,name="dispatch")
 class PaymentVerificationView(View):
     def post(self, request, *args, **kwargs):
         try:
@@ -815,6 +849,8 @@ class PaymentVerificationView(View):
             return JsonResponse({"error": "An unexpected error occurred.", "details": str(e)}, status=400)
 
 
+
+@method_decorator(decs,name="dispatch")
 class ServiceProviderHistoryView(View):
     template_name = "provider_History.html"
 
@@ -827,6 +863,7 @@ class ServiceProviderHistoryView(View):
         return render(request,self.template_name,{"data":qs})
 
 
+@method_decorator(decs,name="dispatch")
 class CustomerHistoryView(View):
     template_name = "customer_History.html"
 
@@ -839,7 +876,7 @@ class CustomerHistoryView(View):
 
 
 
-
+@method_decorator(decs,name="dispatch")
 class CreateRatingView(View):
     def get(self, request, *args, **kwargs):
         id = kwargs.get('pk')
@@ -909,7 +946,7 @@ class CreateRatingView(View):
 
 
 
-
+@method_decorator(decs,name="dispatch")
 class RatingListView(View):
     def get(self, request, *args, **kwargs):
         service_provider_id = kwargs.get('pk')  # Extract `pk` from URL
@@ -922,10 +959,57 @@ class RatingListView(View):
 
         # Fetch all ratings for this service provider
         ratings = Rating.objects.filter(service_provider_id=service_provider_id).select_related('breakdown_request__customer')
-
+        
         return render(request, 'rating_list.html', {
             'service_provider': service_provider,
             'ratings': ratings,
         })
 
 
+@method_decorator(decs,name="dispatch")
+class PasswordResestView(View):
+
+    template_name="password_reset.html"
+
+    form_class=PasswordResetForm
+
+    def get(self,request,*args,**kwargs):
+
+        form_instance=self.form_class()
+
+        return render(request,self.template_name,{"form":form_instance})
+
+    def post(self,request,*args,**kwargs):
+
+        form_instance=self.form_class(request.POST)
+
+        if form_instance.is_valid():
+
+            username=form_instance.cleaned_data.get("username")
+
+            email=form_instance.cleaned_data.get("email")
+
+            password1=form_instance.cleaned_data.get("password1")
+
+            password2=form_instance.cleaned_data.get("password2")
+
+            print(username,email,password1,password2)
+
+            try:
+                assert password1==password2,"password mismatch"
+
+                user_object=User.objects.get(username=username,email=email)
+
+                user_object.set_password(password2)
+
+                user_object.save()
+
+                return redirect('signin')
+
+            except Exception as e:
+
+                messages.error(request,f"{e}")
+
+                return render(request,self.template_name,{"form":form_instance})
+
+        return render(request,self.template_name,{"form":form_instance})

@@ -87,8 +87,8 @@ class BreakdownRequestCreateForm(forms.ModelForm):
         label="Service Types"
     )
 
-    latitude = forms.FloatField(widget=forms.HiddenInput(), required=True)
-    longitude = forms.FloatField(widget=forms.HiddenInput(), required=True)
+    latitude = forms.FloatField(widget=forms.HiddenInput(), required=False)
+    longitude = forms.FloatField(widget=forms.HiddenInput(), required=False)
 
     class Meta:
         model = BreakdownRequest
@@ -150,6 +150,11 @@ class CustomerProfileForm(forms.ModelForm):
         widget=forms.EmailInput(attrs={'class': 'form-control'}), 
         label='E-mail'
     )
+    phone_number = forms.CharField(
+        required=False, 
+        widget=forms.TextInput(attrs={'class': 'form-control'}), 
+        label='Phone Number'
+    )
     
     address = forms.CharField(
         max_length=200, 
@@ -171,6 +176,7 @@ class CustomerProfileForm(forms.ModelForm):
             # Initialize 'username' and 'email' with the user's data
             self.fields['username'].initial = user.username
             self.fields['email'].initial = user.email
+            self.fields['phone_number'].initial = user.phone_number
 
 
 
@@ -186,23 +192,13 @@ class BreakdownRequestUpdateForm(forms.ModelForm):
     class Meta:
         model = BreakdownRequest
         fields = [
-            "customer",
-            "service_provider",
-            "description",
-            "image",
+            
             "status",
-            "latitude",
-            "longitude",
+            
             "estimated_date",
         ]
         widgets = {
-            "customer": forms.HiddenInput(),  # Readonly Text Input
             "status": forms.Select(attrs={"class": "form-control"}),  # Editable
-            "description": forms.HiddenInput(),  # Hidden
-            "image": forms.HiddenInput(),  # Hidden
-            "service_provider": forms.HiddenInput(),  # Hidden
-            "latitude": forms.HiddenInput(),  # Hidden
-            "longitude": forms.HiddenInput(),  # Hidden
             "estimated_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
         }
         
@@ -222,3 +218,14 @@ class RatingForm(forms.ModelForm):
     class Meta:
         model = Rating
         fields = ['rating', 'review']
+
+
+class PasswordResetForm(forms.Form):
+
+    username=forms.CharField()
+
+    email=forms.EmailField()
+
+    password1=forms.CharField()
+
+    password2=forms.CharField()

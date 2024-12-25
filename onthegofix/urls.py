@@ -47,6 +47,7 @@ urlpatterns = [
     path('customer/history/',views.CustomerHistoryView.as_view(), name='customer-history'),
     path('rating/create/<int:pk>/', views.CreateRatingView.as_view(), name='create-rating'),
     path('ratings/<int:pk>/', views.RatingListView.as_view(), name='rating_list'),
+    path('password/reset/', views.PasswordResestView.as_view(), name='password-reset'),
 ]
 if settings.DEBUG:  # Serve media files during development
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

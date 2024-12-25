@@ -8,6 +8,21 @@
             {% for rating in ratings %}
                 <li>
                     <strong>Rated by:</strong> {{ rating.breakdown_request.customer.username }}<br>
+                    <strong>Service Provided:</strong> 
+                            {% if rating.breakdown_request.service_types.exists %}
+                            {% for service in rating.breakdown_request.service_types.all %}
+                            <div class="mt-2">
+                                <strong>{{ service.vehicle_type|capfirst }}</strong>
+                                <ul class="list-disc pl-4">
+                                    <li>{{ service.name }}</li>
+                                </ul>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <p class="text-gray-500">No services available.</p>
+                            {% endif %}
+                       <br>
+
                     <strong>Rating:</strong> 
                     <span>
                         {% for _ in rating.rating|add:"0"|range_filter %}

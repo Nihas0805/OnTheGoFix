@@ -57,7 +57,7 @@
       {% endif %}
     </div>
 
-    <!-- Location Section -->
+    {%if item.request.latitude and item.request.longitude %}
     <div class="mb-4">
       <button 
         class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
@@ -65,6 +65,7 @@
         Get Location
       </button>
     </div>
+    {%endif%}
 
     <!-- Actions -->
     <form method="post">
