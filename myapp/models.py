@@ -87,7 +87,6 @@ class ServiceProviderProfile(BaseModel):
     average_rating = models.FloatField(default=0.0)  
 
     def update_rating(self):
-        """Update the average rating and total reviews."""
         ratings = Rating.objects.filter(service_provider=self.user).aggregate(
             average=models.Avg('rating'),
             count=models.Count('rating')
@@ -99,8 +98,8 @@ class ServiceProviderProfile(BaseModel):
     
 
     def display_stars(self):
-        full_stars = floor(self.average_rating)  # Number of full stars
-        half_star = 1 if self.average_rating - full_stars >= 0.5 else 0  # Half star logic
+        full_stars = floor(self.average_rating)  
+        half_star = 1 if self.average_rating - full_stars >= 0.5 else 0  
         empty_stars = 5 - full_stars - half_star
         return '★' * full_stars + '⭑' * half_star + '☆' * empty_stars
 

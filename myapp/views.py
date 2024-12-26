@@ -30,6 +30,8 @@ from django.views.decorators.cache import never_cache
 
 from myapp.decorators import signin_required
 
+from django.db.models import Q 
+
 
 
 decs=[signin_required,never_cache]
@@ -146,13 +148,25 @@ class CustomerIndexView(View):
     template_name = "customer_index.html"
 
     def get(self, request, *args, **kwargs):
-        qs = ServiceProviderProfile.objects.prefetch_related('service_types').all().order_by('-availability_status')
         
+        search_keyword = request.GET.get("search", "").strip()
+
+        qs = ServiceProviderProfile.objects.prefetch_related('service_types').all().order_by('-availability_status')
+
+        if search_keyword:
+            qs = qs.filter(
+                Q(user__username__icontains=search_keyword) |
+                Q(address__icontains=search_keyword) |
+                Q(service_types__name__icontains=search_keyword) |
+                Q(service_types__vehicle_type__icontains=search_keyword)
+            ).distinct()
+
         vehicle_types = ServiceType.objects.values_list('vehicle_type', flat=True).distinct()
 
         data = {
             "providers": qs,
-            "vehicle_types": vehicle_types
+            "vehicle_types": vehicle_types,
+            "search_keyword": search_keyword,  
         }
         return render(request, self.template_name, data)
 
@@ -163,25 +177,33 @@ class ProviderIndexView(View):
     template_name = "provider_index.html"
 
     def get(self, request, *args, **kwargs):
+
+        search_keyword = request.GET.get("search", "").strip()
+
+        qs = BreakdownRequest.objects.filter(service_provider=request.user, status='pending').order_by('created_date')
         
-        qs = BreakdownRequest.objects.filter(service_provider=request.user,status='pending').order_by('created_date')
+        if search_keyword:
+            qs = qs.filter(
+                Q(service_types__name__icontains=search_keyword) |
+                Q(service_types__vehicle_type__icontains=search_keyword)
+            ).distinct()
 
-       
-        breakdown_data = [
-            {
-                "request": request,
+        breakdown_data = []  
 
-                "grouped_services": {
-                    'two_wheeler': request.service_types.filter(vehicle_type='two_wheeler'),
-                    'four_wheeler': request.service_types.filter(vehicle_type='four_wheeler'),
-                    'others': request.service_types.filter(vehicle_type='others'),
+        for requests in qs:
+            breakdown_data.append(
+                {
+                    "request": requests,
+                    "grouped_services": {
+                        'two_wheeler': requests.service_types.filter(vehicle_type='two_wheeler'),
+                        'four_wheeler': requests.service_types.filter(vehicle_type='four_wheeler'),
+                        'others': requests.service_types.filter(vehicle_type='others'),
+                    }
                 }
-            }
-            for request in qs
-        ]
+            )
 
-       
-        return render(request, self.template_name, {"data": breakdown_data})
+        return render(request, self.template_name, {"data": breakdown_data,"search_keyword": search_keyword, })
+
 
 
     def post(self, request, *args, **kwargs):
@@ -521,32 +543,42 @@ class ServiceProviderDashboardView(View):
 
     def get(self, request, *args, **kwargs):
         
+        search_keyword = request.GET.get("search", "").strip()
         selected_status=request.GET.get("status","all")
 
-    
-        if selected_status =="all":
-                
-            qs = BreakdownRequest.objects.filter(service_provider=request.user).exclude(status__in=['delivered','pending','cancelled']).order_by('-created_date')
+        if search_keyword:
             
-        else:
+            qs = BreakdownRequest.objects.filter(service_provider=request.user).filter(
+                Q(customer__username__icontains=search_keyword) |
+                Q(service_types__name__icontains=search_keyword) |
+                Q(service_types__vehicle_type__icontains=search_keyword)
+            ).distinct()
+        else:    
+            if selected_status =="all":
+                    
+                qs = BreakdownRequest.objects.filter(service_provider=request.user).exclude(status__in=['delivered','pending','cancelled']).order_by('-created_date')
                 
-            qs=BreakdownRequest.objects.filter(status=selected_status,service_provider=request.user).order_by('-created_date')
+            else:
+                    
+                qs=BreakdownRequest.objects.filter(status=selected_status,service_provider=request.user).order_by('-created_date')
 
-        breakdown_data = [
-            {
-                "request": request,
-                "grouped_services": {
-                    'two_wheeler': request.service_types.filter(vehicle_type='two_wheeler'),
-                    'four_wheeler': request.service_types.filter(vehicle_type='four_wheeler'),
-                    'others': request.service_types.filter(vehicle_type='others'),
-                },
-                "status": request.get_status_display(),  
-            }
-            for request in qs
-        ]
+        breakdown_data = []  
+
+        for requests in qs:
+            breakdown_data.append(
+                {
+                    "request": requests,
+                    "grouped_services": {
+                        'two_wheeler': requests.service_types.filter(vehicle_type='two_wheeler'),
+                        'four_wheeler': requests.service_types.filter(vehicle_type='four_wheeler'),
+                        'others': requests.service_types.filter(vehicle_type='others'),
+                    },
+                    "status": requests.get_status_display(),  
+                }
+            )
 
 
-        return render(request, self.template_name, {"data": breakdown_data,"selected": selected_status,})
+        return render(request, self.template_name, {"data": breakdown_data,"selected": selected_status,"search_keyword": search_keyword})
 
 
 
@@ -627,32 +659,39 @@ class CustomerDashboardView(View):
     template_name = "customer_dashboard.html"
 
     def get(self, request, *args, **kwargs):
-       
-        selected_status=request.GET.get("status","all")
+        
+        search_keyword = request.GET.get("search", "").strip()
+        selected_status = request.GET.get("status", "all")
 
-        if selected_status =="all":
-                
-            qs = BreakdownRequest.objects.filter(customer=request.user).exclude(status__in=['delivered','cancelled']).order_by('-created_date')
+        if search_keyword:
             
-        else:
-                
-            qs=BreakdownRequest.objects.filter(status=selected_status,customer=request.user).order_by('-created_date')
-
-        breakdown_data = [
-            {
-                "request": request,
-                "grouped_services": {
-                    'two_wheeler': request.service_types.filter(vehicle_type='two_wheeler'),
-                    'four_wheeler': request.service_types.filter(vehicle_type='four_wheeler'),
-                    'others': request.service_types.filter(vehicle_type='others'),
-                },
-                "status": request.get_status_display(),  
-            }
-            for request in qs
-        ]
+            qs = BreakdownRequest.objects.filter(customer=request.user).filter(
+                Q(service_provider__username__icontains=search_keyword) |
+                Q(service_types__name__icontains=search_keyword) |
+                Q(service_types__vehicle_type__icontains=search_keyword)
+            ).distinct()
+        else:    
+            if selected_status == "all":
+                qs = BreakdownRequest.objects.filter(customer=request.user).exclude(status__in=["delivered", "cancelled"]).order_by("-created_date")
+            else:
+                qs = BreakdownRequest.objects.filter(status=selected_status, customer=request.user).order_by("-created_date")
 
         
-        return render(request, self.template_name, {"data": breakdown_data,"selected": selected_status,})
+        breakdown_data = []
+        for requests in qs:
+            breakdown_data.append(
+                {
+                    "request": requests,
+                    "grouped_services": {
+                        'two_wheeler': requests.service_types.filter(vehicle_type='two_wheeler'),
+                        'four_wheeler': requests.service_types.filter(vehicle_type='four_wheeler'),
+                        'others': requests.service_types.filter(vehicle_type='others'),
+                    },
+                    "status": requests.get_status_display(),
+                }
+            )
+
+        return render(request,self.template_name,{"data": breakdown_data,"selected": selected_status,"search_keyword": search_keyword,},)
 
 
     def post(self, request, *args, **kwargs):
@@ -785,6 +824,7 @@ class ServiceProviderHistoryView(View):
     template_name = "provider_History.html"
 
     def get(self, request, *args, **kwargs):
+
         
         qs = BreakdownRequest.objects.filter(service_provider=request.user,status='delivered').select_related('payment').order_by('-created_date')
 
@@ -796,6 +836,7 @@ class CustomerHistoryView(View):
     template_name = "customer_History.html"
 
     def get(self, request, *args, **kwargs):
+
         qs = BreakdownRequest.objects.filter(customer=request.user, status='delivered').select_related('payment').order_by('-created_date')
 
         return render(request, self.template_name, {"data": qs})
