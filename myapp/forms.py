@@ -47,17 +47,14 @@ class ServiceProviderProfileForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
-        # Populate the 'username' field with the user's name
         if user:
             self.fields['username'].initial = user.username
 
-        # Group Service Types by vehicle_type
         grouped_service_types = {}
         for service in ServiceType.objects.all():
             vehicle_type_label = dict(ServiceType.vehicle_type_choices).get(service.vehicle_type, "Others")
             grouped_service_types.setdefault(vehicle_type_label, []).append((service.id, service.name))
 
-        # Set choices for service_types
         self.fields['service_types'].choices = [(group, services) for group, services in grouped_service_types.items()]
 
 
@@ -67,7 +64,7 @@ class ServiceProviderProfileForm(forms.ModelForm):
 
 
 class BreakdownRequestCreateForm(forms.ModelForm):
-    # Service Provider Username (Read-Only Field)
+    
     service_provider_username = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
         required=False,
@@ -79,7 +76,7 @@ class BreakdownRequestCreateForm(forms.ModelForm):
         label="Address"
     )
 
-    # Dynamically group service types by vehicle type
+    
     service_types = forms.ModelMultipleChoiceField(
         queryset=ServiceType.objects.none(),
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
@@ -99,28 +96,24 @@ class BreakdownRequestCreateForm(forms.ModelForm):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
-        # Set service types based on the selected service provider
+        
         if service_provider:
             self.fields['service_types'].queryset = service_provider.service_types.all()
 
-        # Prepopulate the service provider username and customer address
+       
         if service_provider and service_provider.user:
             self.fields['service_provider_username'].initial = service_provider.user.username
 
         if user and hasattr(user, 'customer_profile'):
             self.fields['customer_address'].initial = user.customer_profile.address
 
-        # Additional widget styling
+        
         self.fields['description'].widget.attrs.update({'class': 'form-control'})
         self.fields['image'].widget.attrs.update({'class': 'form-control'})
 
-        # Prepare grouped service types for display
         self.grouped_service_types = self.group_service_types_by_vehicle_type(service_provider)
 
     def group_service_types_by_vehicle_type(self, service_provider):
-        """
-        Group the service types by vehicle type for display in the form.
-        """
         grouped = {
             'two_wheeler': [],
             'four_wheeler': [],
@@ -138,7 +131,7 @@ class BreakdownRequestCreateForm(forms.ModelForm):
 
 
 class CustomerProfileForm(forms.ModelForm):
-    # Username and email are read-only, but initialized with current user's values
+    
     username = forms.CharField(
         max_length=150, 
         required=False, 
@@ -165,15 +158,15 @@ class CustomerProfileForm(forms.ModelForm):
 
     class Meta:
         model = CustomerProfile
-        fields = ['address']  # Only 'address' is editable
+        fields = ['address']  
 
     def __init__(self, *args, **kwargs):
-        # Pop 'user' from kwargs, if passed, to initialize username/email fields
+        
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
         if user:
-            # Initialize 'username' and 'email' with the user's data
+           
             self.fields['username'].initial = user.username
             self.fields['email'].initial = user.email
             self.fields['phone_number'].initial = user.phone_number
@@ -205,7 +198,7 @@ class BreakdownRequestUpdateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Combine vehicle type and service type for display
+        
         if self.instance and self.instance.pk:
             service_types_display_text = "\n".join(
                 f"{st.get_vehicle_type_display()} : {st.name}"

@@ -2,29 +2,29 @@
 
 {% block main_block %}
 <div class="relative my-12 flex w-full flex-col items-center sm:mt-24">
-  {% for item in data %}
+  {% for d in data %}
   <div class="w-full max-w-4xl p-6 bg-white rounded-lg shadow-md border border-gray-300 mb-6 relative">
     <!-- Header Section -->
     <div class="flex justify-between items-start mb-4">
       <h2 class="text-2xl font-bold text-gray-800">
-        Breakdown Request for {{ item.request.customer.username }}
+        Breakdown Request for {{ d.request.customer.username }}
       </h2>
       <p class="text-sm text-gray-500 absolute top-4 right-6">
-        <strong>Assigned At:</strong> {{ item.request.created_date|date:"M d, Y h:i A" }}
+        <strong>Assigned At:</strong> {{ d.request.created_date|date:"M d, Y h:i A" }}
       </p>
     </div>
 
     <!-- Customer Details -->
     <div class="mb-4">
-      <p class="text-gray-600"><strong>Customer Username:</strong> {{ item.request.customer.username }}</p>
-      <p class="text-gray-600"><strong>Phone Number:</strong> {{ item.request.customer.phone_number }}</p>
-      <p class="text-gray-600"><strong>Customer Address:</strong> {{ item.request.customer.customer_profile.address }}</p>
+      <p class="text-gray-600"><strong>Customer Username:</strong> {{ d.request.customer.username }}</p>
+      <p class="text-gray-600"><strong>Phone Number:</strong> {{ d.request.customer.phone_number }}</p>
+      <p class="text-gray-600"><strong>Customer Address:</strong> {{ d.request.customer.customer_profile.address }}</p>
     </div>
 
     <!-- Service Details -->
     <div class="mb-4">
       <p class="text-gray-600"><strong>Service Details:</strong></p>
-      {% for vehicle_type, services in item.grouped_services.items %}
+      {% for vehicle_type, services in d.grouped_services.items %}
         {% if services.exists %}
           <p class="text-gray-800 font-bold mt-2">
             Vehicle Type: {{ vehicle_type|capfirst }}
@@ -36,19 +36,19 @@
           </ul>
         {% endif %}
       {% endfor %}
-      <p class="text-gray-600"><strong>Description:</strong> {{ item.request.description }}</p>
+      <p class="text-gray-600"><strong>Description:</strong> {{ d.request.description }}</p>
     </div>
 
     <!-- Image Preview Section -->
     <div class="mb-4">
       <p class="text-gray-600"><strong>Image:</strong></p>
-      {% if item.request.image %}
+      {% if d.request.image %}
       <button class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700"
-              onclick="toggleImage('{{ item.request.id }}')">
+              onclick="toggleImage('{{ d.request.id }}')">
         Preview Image
       </button>
-      <div id="image-dropdown-{{ item.request.id }}" class="hidden mt-4">
-        <img src="{{ item.request.image.url }}" alt="Breakdown Request Image"
+      <div id="image-dropdown-{{ d.request.id }}" class="hidden mt-4">
+        <img src="{{ d.request.image.url }}" alt="Breakdown Request Image"
              class="w-32 h-32 rounded-lg shadow-md transform transition-transform duration-300 cursor-pointer"
              onclick="zoomImage(this)">
       </div>
@@ -57,11 +57,11 @@
       {% endif %}
     </div>
 
-    {%if item.request.latitude and item.request.longitude %}
+    {%if d.request.latitude and d.request.longitude %}
     <div class="mb-4">
       <button 
         class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700"
-        onclick="redirectToMap({{ item.request.latitude }}, {{ item.request.longitude }})">
+        onclick="redirectToMap({{ d.request.latitude }}, {{ d.request.longitude }})">
         Get Location
       </button>
     </div>
@@ -70,7 +70,7 @@
     <!-- Actions -->
     <form method="post">
       {% csrf_token %}
-      <input type="hidden" name="request_id" value="{{ item.request.id }}" />
+      <input type="hidden" name="request_id" value="{{ d.request.id }}" />
       <div class="flex justify-center gap-4 mt-4">
         <button type="submit" name="action" value="accept"
                 class="px-4 py-2 bg-teal-500 text-white rounded-lg shadow hover:bg-teal-600">

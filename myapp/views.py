@@ -148,7 +148,6 @@ class CustomerIndexView(View):
     def get(self, request, *args, **kwargs):
         qs = ServiceProviderProfile.objects.prefetch_related('service_types').all().order_by('-availability_status')
         
-        # Fetch distinct vehicle types to filter in template
         vehicle_types = ServiceType.objects.values_list('vehicle_type', flat=True).distinct()
 
         data = {
@@ -164,39 +163,33 @@ class ProviderIndexView(View):
     template_name = "provider_index.html"
 
     def get(self, request, *args, **kwargs):
-        # Fetch pending breakdown requests for the current service provider
-        qs = BreakdownRequest.objects.filter(service_provider=request.user, status='pending').order_by('created_date')
+        
+        qs = BreakdownRequest.objects.filter(service_provider=request.user,status='pending').order_by('created_date')
 
-        breakdown_data = []
-        for request_instance in qs:
-            try:
-                # Group services under vehicle types
-                grouped_services = {
-                    'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
-                    'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
-                    'others': request_instance.service_types.filter(vehicle_type='others'),
+       
+        breakdown_data = [
+            {
+                "request": request,
+
+                "grouped_services": {
+                    'two_wheeler': request.service_types.filter(vehicle_type='two_wheeler'),
+                    'four_wheeler': request.service_types.filter(vehicle_type='four_wheeler'),
+                    'others': request.service_types.filter(vehicle_type='others'),
                 }
-            except ServiceType.DoesNotExist:
-                grouped_services = None
+            }
+            for request in qs
+        ]
 
-            # Append processed request data
-            breakdown_data.append({
-                "request": request_instance,
-                "grouped_services": grouped_services,
-            })
+       
+        return render(request, self.template_name, {"data": breakdown_data})
 
-        # Pass structured data to the template
-        context = {
-            "data": breakdown_data,
-        }
-        return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        # Handle the accept or cancel action
+        
         action = request.POST.get("action")
         request_id = request.POST.get("request_id")
 
-        # Fetch and update the status of the breakdown request
+       
         breakdown_request = BreakdownRequest.objects.filter(id=request_id).first()
         if breakdown_request:
             if action == "accept":
@@ -207,7 +200,7 @@ class ProviderIndexView(View):
                 messages.error(request,"Service Rejected")
             breakdown_request.save()
 
-        # Redirect back to the updated view
+        
         return self.get(request, *args, **kwargs) 
 
 
@@ -258,37 +251,34 @@ class LogoutView(View):
 
 @method_decorator(decs,name="dispatch")
 class ServiceProviderProfileEditView(View):
+
     template_name = "provider_profile_edit.html"
     form_class = ServiceProviderProfileForm
 
     def get(self, request, *args, **kwargs):
-        # Fetch the user's profile object or create one if it doesn't exist
+        
         profile_object = ServiceProviderProfile.objects.get(user=request.user)
         form_instance = self.form_class(instance=profile_object, user=request.user)
         return render(request, self.template_name, {"form": form_instance})
 
     def post(self, request, *args, **kwargs):
-        # Fetch the user's profile object or create one if it doesn't exist
+        
         profile_object = ServiceProviderProfile.objects.get(user=request.user)
         
-        # Bind POST data and FILES to the form instance
+        
         form_instance = self.form_class(request.POST, request.FILES, instance=profile_object, user=request.user)
         
         if form_instance.is_valid():
-            print("Form is valid. Saving data...")
             profile = form_instance.save(commit=False)
-            profile.user = request.user  # Explicitly link the profile to the user
+            profile.user = request.user  
             profile.save()
             form_instance.save_m2m() 
-            messages.success(request,"Updated Successfully") # Save many-to-many relationships
-            print("Uploaded file:", request.FILES.get('profile_picture'))
+            messages.success(request,"Updated Successfully")
+            
             
             return redirect("provider-profile")
         else:
             messages.error(request,"Error Updating")
-            print("Form errors:", form_instance.errors)  # Debug form errors
-            print("POST Data:", request.POST)           # Debug POST data
-            print("FILES Data:", request.FILES)         # Debug FILE data
 
         return render(request, self.template_name, {"form": form_instance})
 
@@ -298,27 +288,23 @@ class ServiceProviderProfileEditView(View):
 
 @method_decorator(decs,name="dispatch")
 class ProviderProfileView(View):
+
     template_name = "provider_profile.html"
 
     def get(self, request, *args, **kwargs):
-        try:
-            profile = ServiceProviderProfile.objects.prefetch_related('service_types').get(user=request.user)
-            
-            # Group services under vehicle types
-            grouped_services = {
-                'two_wheeler': profile.service_types.filter(vehicle_type='two_wheeler'),
-                'four_wheeler': profile.service_types.filter(vehicle_type='four_wheeler'),
-                'others': profile.service_types.filter(vehicle_type='others'),
-            }
-        except ServiceProviderProfile.DoesNotExist:
-            profile = None
-            grouped_services = None
+    
+        profile = ServiceProviderProfile.objects.prefetch_related('service_types').filter(user=request.user).first()
 
-        context = {
-            "profile": profile,
-            "grouped_services": grouped_services,
+        
+        grouped_services = {
+            'two_wheeler': profile.service_types.filter(vehicle_type='two_wheeler') if profile else [],
+            'four_wheeler': profile.service_types.filter(vehicle_type='four_wheeler') if profile else [],
+            'others': profile.service_types.filter(vehicle_type='others') if profile else [],
         }
-        return render(request, self.template_name, context)
+
+        
+        return render(request, self.template_name, {"profile": profile,"grouped_services": grouped_services,})
+
 
 
 
@@ -328,37 +314,38 @@ class ProviderProfileView(View):
 
 @method_decorator(decs,name="dispatch")
 class BreakdownRequestCreateView(View):
+
     template_name = 'breakdownrequest_create.html'
+
+    form_class =BreakdownRequestCreateForm
 
     def get(self, request, *args, **kwargs):
         service_provider_id = kwargs.get('service_provider_id')
         service_provider = ServiceProviderProfile.objects.filter(user_id=service_provider_id).first()
 
-        if not service_provider:
-            return redirect('customer-index')  # Redirect if service provider doesn't exist
+        
 
-        form = BreakdownRequestCreateForm(service_provider=service_provider, user=request.user)
-        return render(request, self.template_name, {'form': form, 'service_provider': service_provider})
+        form_instance = self.form_class(service_provider=service_provider, user=request.user)
+        return render(request, self.template_name, {'form': form_instance, 'service_provider': service_provider})
 
     def post(self, request, *args, **kwargs):
         service_provider_id = kwargs.get('service_provider_id')
         service_provider = ServiceProviderProfile.objects.filter(user_id=service_provider_id).first()
 
-        if not service_provider:
-            return redirect('customer-index')
 
-        form = BreakdownRequestCreateForm(request.POST, request.FILES, service_provider=service_provider, user=request.user)
+        form_instance = self.form_class(request.POST, request.FILES, service_provider=service_provider, user=request.user)
 
-        if form.is_valid():
-            breakdown_request = form.save(commit=False)
+        if form_instance.is_valid():
+
+            breakdown_request = form_instance.save(commit=False)
             breakdown_request.customer = request.user
             breakdown_request.service_provider = service_provider.user
             breakdown_request.save()
             messages.success(request,"Request send")
-            form.save_m2m()
+            form_instance.save_m2m()
 
-            # Update customer address
-            customer_address = form.cleaned_data.get('customer_address')
+            
+            customer_address = form_instance.cleaned_data.get('customer_address')
             if request.user.customer_profile:
                 request.user.customer_profile.address = customer_address
                 request.user.customer_profile.save()
@@ -376,27 +363,21 @@ class ProviderBreakdownRequestDetailView(View):
     def get(self, request, *args, **kwargs):
         id = kwargs.get("pk")
 
-        # Fetch the BreakdownRequest instance
-        try:
-            request_instance = BreakdownRequest.objects.get(id=id)
-        except BreakdownRequest.DoesNotExist:
-            return render(request, self.template_name, {"error": "Breakdown request not found."})
-
-        # Fetch payment details
+        request_instance = BreakdownRequest.objects.get(id=id)
+        
         payment = Payment.objects.filter(breakdown_request=request_instance).first()
 
-        # Group services under vehicle types
         grouped_services = {
             'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
             'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
             'others': request_instance.service_types.filter(vehicle_type='others'),
         }
 
-        # Prepare context data for the template
+        
         context = {
             "request": request_instance,
             "grouped_services": grouped_services,
-            "payment": payment,  # Include payment details in context
+            "payment": payment,  
         }
         return render(request, self.template_name, context)
 
@@ -409,27 +390,24 @@ class CustomerBreakdownRequestDetailView(View):
     def get(self, request, *args, **kwargs):
         id = kwargs.get("pk")
 
-        # Fetch the BreakdownRequest instance
-        try:
-            request_instance = BreakdownRequest.objects.get(id=id)
-        except BreakdownRequest.DoesNotExist:
-            return render(request, self.template_name, {"error": "Breakdown request not found."})
+    
+        request_instance = BreakdownRequest.objects.get(id=id)
+       
 
-        # Fetch payment details
+        
         payment = Payment.objects.filter(breakdown_request=request_instance).first()
 
-        # Group services under vehicle types
+        
         grouped_services = {
             'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
             'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
             'others': request_instance.service_types.filter(vehicle_type='others'),
         }
 
-        # Prepare context data for the template
         context = {
             "request": request_instance,
             "grouped_services": grouped_services,
-            "payment": payment,  # Include payment details in context
+            "payment": payment,  
         }
         return render(request, self.template_name, context)
 
@@ -485,57 +463,47 @@ from django.utils.timezone import now
 class BreakdownRequestUpdateView(View):
     template_name = "breakdownrequest_edit.html"
 
+    form_class=BreakdownRequestUpdateForm
+
     def get(self, request, *args, **kwargs):
-        # Get the pk from kwargs and use it to fetch the breakdown request
-        pk = kwargs.get('pk')
-        try:
-            # Fetch the breakdown request object using pk
-            breakdown_request = BreakdownRequest.objects.get(pk=pk)
-        except BreakdownRequest.DoesNotExist:
-            return redirect("provider-index")  # Redirect if not found
+        
+        id = kwargs.get('pk')
+    
+        breakdown_request = BreakdownRequest.objects.get(id=id)
+        
+        form_instance = self.form_class(instance=breakdown_request)
 
-        # Initialize the form with the existing data
-        form = BreakdownRequestUpdateForm(instance=breakdown_request)
-
-        return render(request, self.template_name, {"form": form, "breakdown_request": breakdown_request})
+        return render(request, self.template_name, {"form": form_instance, "breakdown_request": breakdown_request})
 
     def post(self, request, *args, **kwargs):
-    # Get the pk from kwargs and use it to fetch the breakdown request
-        pk = kwargs.get('pk')
-        try:
-            # Fetch the breakdown request object using pk
-            breakdown_request = BreakdownRequest.objects.get(pk=pk)
-        except BreakdownRequest.DoesNotExist:
-            return redirect("provider-dashboard")  # Redirect if not found
+    
+        id = kwargs.get('pk')
+        
+        breakdown_request = BreakdownRequest.objects.get(id=id)
 
-        # Initialize the form with POST data
-        form = BreakdownRequestUpdateForm(request.POST, request.FILES, instance=breakdown_request)
+        form_instance = self.form_class(request.POST, request.FILES, instance=breakdown_request)
 
-        if form.is_valid():
-            updated_request = form.save(commit=False)
+        if form_instance.is_valid():
+            updated_request = form_instance.save(commit=False)
 
-            # Retain original image if no new image is uploaded
-            if not form.cleaned_data.get("image"):
-                updated_request.image = breakdown_request.image
-
-            # Ensure all other fields retain their original values
+            updated_request.image = breakdown_request.image
             updated_request.customer = breakdown_request.customer
             updated_request.service_provider = breakdown_request.service_provider
             updated_request.description = breakdown_request.description
             updated_request.latitude = breakdown_request.latitude
             updated_request.longitude = breakdown_request.longitude
 
-            # Update status if it's changed
-            updated_request.status = form.cleaned_data["status"]
-            updated_request.estimated_date = form.cleaned_data["estimated_date"]
+            
+            updated_request.status = form_instance.cleaned_data["status"]
+            updated_request.estimated_date = form_instance.cleaned_data["estimated_date"]
 
-            # Check which button was clicked (Take Action or Cancel)
+            
             if 'take_action' in request.POST:
                 updated_request.status = 'accepted'
             elif 'cancel' in request.POST:
                 updated_request.status = 'cancelled'
 
-            # If status is completed, populate the `completed_at` field
+            
             if updated_request.status == 'delivered':
                 updated_request.completed_at = now()
             else:
@@ -543,14 +511,8 @@ class BreakdownRequestUpdateView(View):
 
             updated_request.save()
             messages.success(request, "Updated Successfully")
-            return redirect('provider-dashboard')  # Redirect to the list view or wherever you want
-
-        # Include errors in the context if the form is not valid
-        return render(request, self.template_name, {
-            "form": form,
-            "breakdown_request": breakdown_request,
-            "form_errors": form.errors,  # Add errors to the context
-        })
+            return redirect('provider-dashboard')  
+        return render(request, self.template_name, {"form": form_instance,"breakdown_request": breakdown_request,"form_errors": form.errors, })
 
 
 @method_decorator(decs,name="dispatch")
@@ -558,44 +520,34 @@ class ServiceProviderDashboardView(View):
     template_name = "provider_dashboard.html"
 
     def get(self, request, *args, **kwargs):
-        # Fetch all breakdown requests except 'pending', 'cancelled', and 'completed' statuses for the current user
         
         selected_status=request.GET.get("status","all")
 
     
         if selected_status =="all":
                 
-            qs = BreakdownRequest.objects.filter(
-            service_provider=request.user
-        ).exclude(status__in=['delivered','pending','cancelled']).order_by('-created_date')
+            qs = BreakdownRequest.objects.filter(service_provider=request.user).exclude(status__in=['delivered','pending','cancelled']).order_by('-created_date')
             
         else:
                 
             qs=BreakdownRequest.objects.filter(status=selected_status,service_provider=request.user).order_by('-created_date')
 
-        breakdown_data = []
-        for request_instance in qs:
-            try:
-                # Group services under vehicle types
-                grouped_services = {
-                    'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
-                    'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
-                    'others': request_instance.service_types.filter(vehicle_type='others'),
-                }
-            except ServiceType.DoesNotExist:
-                grouped_services = None
+        breakdown_data = [
+            {
+                "request": request,
+                "grouped_services": {
+                    'two_wheeler': request.service_types.filter(vehicle_type='two_wheeler'),
+                    'four_wheeler': request.service_types.filter(vehicle_type='four_wheeler'),
+                    'others': request.service_types.filter(vehicle_type='others'),
+                },
+                "status": request.get_status_display(),  
+            }
+            for request in qs
+        ]
 
-            breakdown_data.append({
-                "request": request_instance,
-                "grouped_services": grouped_services,
-                "status": request_instance.get_status_display(),  # Display the readable status
-            })
 
-        context = {
-            "data": breakdown_data,
-            "selected":selected_status,
-        }
-        return render(request, self.template_name, context)
+        return render(request, self.template_name, {"data": breakdown_data,"selected": selected_status,})
+
 
 
 
@@ -670,60 +622,45 @@ class SetPaymentAmountView(View):
         return redirect('provider-dashboard')  # Redirect to the next page
 
 
-
 @method_decorator(decs,name="dispatch")
 class CustomerDashboardView(View):
     template_name = "customer_dashboard.html"
 
     def get(self, request, *args, **kwargs):
-        # Fetch all breakdown requests except 'pending', 'cancelled', and 'completed' statuses for the current user
-        
-
+       
         selected_status=request.GET.get("status","all")
 
-    
         if selected_status =="all":
                 
-            qs = BreakdownRequest.objects.filter(
-            customer=request.user
-        ).exclude(status__in=['delivered','cancelled']).order_by('-created_date')
+            qs = BreakdownRequest.objects.filter(customer=request.user).exclude(status__in=['delivered','cancelled']).order_by('-created_date')
             
         else:
                 
             qs=BreakdownRequest.objects.filter(status=selected_status,customer=request.user).order_by('-created_date')
 
-        breakdown_data = []
-        for request_instance in qs:
-            try:
-                # Group services under vehicle types
-                grouped_services = {
-                    'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
-                    'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
-                    'others': request_instance.service_types.filter(vehicle_type='others'),
-                }
-            except ServiceType.DoesNotExist:
-                grouped_services = None
+        breakdown_data = [
+            {
+                "request": request,
+                "grouped_services": {
+                    'two_wheeler': request.service_types.filter(vehicle_type='two_wheeler'),
+                    'four_wheeler': request.service_types.filter(vehicle_type='four_wheeler'),
+                    'others': request.service_types.filter(vehicle_type='others'),
+                },
+                "status": request.get_status_display(),  
+            }
+            for request in qs
+        ]
 
-            breakdown_data.append({
-                "request": request_instance,
-                "grouped_services": grouped_services,
-                "status": request_instance.get_status_display(),  # Display the readable status
-            })
-
-        context = {
-            "data": breakdown_data,
-            "selected":selected_status
-        }
         
+        return render(request, self.template_name, {"data": breakdown_data,"selected": selected_status,})
 
-        return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        # Handle the accept or cancel action
+        
         action = request.POST.get("action")
         request_id = request.POST.get("request_id")
 
-        # Fetch and update the status of the breakdown request
+        
         breakdown_request = BreakdownRequest.objects.filter(id=request_id).first()
         if breakdown_request:
             if action == "cancel":
@@ -731,7 +668,7 @@ class CustomerDashboardView(View):
                 breakdown_request.save()
                 messages.error(request,"Cancelled")
 
-        # Redirect back to the updated view
+        
         return self.get(request, *args, **kwargs)
 
 
@@ -748,24 +685,17 @@ class CustomerPaymentView(View):
         breakdown_request = get_object_or_404(BreakdownRequest, pk=pk)
         payment = Payment.objects.filter(breakdown_request=breakdown_request).first()
 
-        if not payment:
-            raise Http404("Payment not found for this Breakdown Request.")
-
-        return render(request, self.template_name, {
-            'breakdown_request': breakdown_request,
-            'payment': payment
-        })
+        return render(request, self.template_name, {'breakdown_request': breakdown_request,'payment': payment})
 
     def post(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
         breakdown_request = get_object_or_404(BreakdownRequest, pk=pk)
         payment = Payment.objects.get(breakdown_request=breakdown_request)
 
-        # Prevent further payments if already completed
+    
         if payment.payment_status == 'completed':
             return JsonResponse({"error": "Payment has already been completed."}, status=400)
 
-        # Parse JSON data if sent via fetch
         try:
             data = json.loads(request.body)
         except json.JSONDecodeError:
@@ -856,9 +786,7 @@ class ServiceProviderHistoryView(View):
 
     def get(self, request, *args, **kwargs):
         
-        qs = BreakdownRequest.objects.filter(
-            service_provider=request.user,status='delivered'
-        ).select_related('payment').order_by('-created_date')
+        qs = BreakdownRequest.objects.filter(service_provider=request.user,status='delivered').select_related('payment').order_by('-created_date')
 
         return render(request,self.template_name,{"data":qs})
 
@@ -868,9 +796,7 @@ class CustomerHistoryView(View):
     template_name = "customer_History.html"
 
     def get(self, request, *args, **kwargs):
-        qs = BreakdownRequest.objects.filter(
-            customer=request.user, status='delivered'
-        ).select_related('payment').order_by('-created_date')
+        qs = BreakdownRequest.objects.filter(customer=request.user, status='delivered').select_related('payment').order_by('-created_date')
 
         return render(request, self.template_name, {"data": qs})
 
@@ -878,70 +804,38 @@ class CustomerHistoryView(View):
 
 @method_decorator(decs,name="dispatch")
 class CreateRatingView(View):
+
+    form_class = RatingForm
     def get(self, request, *args, **kwargs):
         id = kwargs.get('pk')
 
-        # Fetch the BreakdownRequest
-        try:
-            breakdown_request = BreakdownRequest.objects.get(id=id)
-        except BreakdownRequest.DoesNotExist:
-            return HttpResponseNotFound("Breakdown Request not found.")
+        breakdown_request = BreakdownRequest.objects.get(id=id)
+    
+        form_instance = self.form_class
 
-        # Check if the breakdown request has a service provider
-        if not breakdown_request.service_provider:
-            return HttpResponse("This Breakdown Request does not have a service provider assigned.")
-
-        # Check if a rating already exists for this breakdown request
-        if Rating.objects.filter(breakdown_request=breakdown_request).exists():
-            return HttpResponse("You have already rated this service.")
-
-        # Prepare the form
-        form = RatingForm()
-
-        return render(request, 'create_rating.html', {
-            'form': form,
-            'service_provider': breakdown_request.service_provider,
-            'breakdown_request': breakdown_request,
-        })
+        return render(request, 'create_rating.html', {'form': form_instance,'service_provider': breakdown_request.service_provider,'breakdown_request': breakdown_request,})
 
     def post(self, request, *args, **kwargs):
         id = kwargs.get('pk')
 
-        # Fetch the BreakdownRequest
-        try:
-            breakdown_request = BreakdownRequest.objects.get(id=id)
-        except BreakdownRequest.DoesNotExist:
-            return HttpResponseNotFound("Breakdown Request not found.")
-
-        # Check if the breakdown request has a service provider
-        if not breakdown_request.service_provider:
-            return HttpResponse("This Breakdown Request does not have a service provider assigned.")
-
-        # Process the form
-        form = RatingForm(request.POST)
-        if form.is_valid():
+        breakdown_request = BreakdownRequest.objects.get(id=id)
+        
+        
+        form_instance = RatingForm(request.POST)
+        if form_instance.is_valid():
             # Save the rating
-            rating = form.save(commit=False)
+            rating = form_instance.save(commit=False)
             rating.breakdown_request = breakdown_request
             rating.service_provider = breakdown_request.service_provider
             rating.save()
             messages.success(request,"Service has been rated")
 
-
-            # Update the service provider's profile
-            try:
-                service_provider_profile = ServiceProviderProfile.objects.get(user=breakdown_request.service_provider)
-                service_provider_profile.update_rating()
-            except ServiceProviderProfile.DoesNotExist:
-                return HttpResponse("Service provider profile not found.")
-
+            service_provider_profile = ServiceProviderProfile.objects.get(user=breakdown_request.service_provider)
+            service_provider_profile.update_rating()
+            
             return redirect('customer-history')  # Replace with your desired redirect path
         else:
-            return render(request, 'create_rating.html', {
-                'form': form,
-                'service_provider': breakdown_request.service_provider,
-                'breakdown_request': breakdown_request,
-            })
+            return render(request, 'create_rating.html', {'form': form_instance,'service_provider': breakdown_request.service_provider,'breakdown_request': breakdown_request, })
 
 
 
@@ -949,21 +843,13 @@ class CreateRatingView(View):
 @method_decorator(decs,name="dispatch")
 class RatingListView(View):
     def get(self, request, *args, **kwargs):
-        service_provider_id = kwargs.get('pk')  # Extract `pk` from URL
+        service_provider_id = kwargs.get('pk')  
 
-        # Fetch the ServiceProviderProfile using the `user_id` (pk in this case)
-        try:
-            service_provider = ServiceProviderProfile.objects.get(user_id=service_provider_id)  
-        except ServiceProviderProfile.DoesNotExist:
-            return HttpResponseNotFound("Service Provider not found.")
-
-        # Fetch all ratings for this service provider
+        service_provider = ServiceProviderProfile.objects.get(user_id=service_provider_id)  
+      
         ratings = Rating.objects.filter(service_provider_id=service_provider_id).select_related('breakdown_request__customer')
         
-        return render(request, 'rating_list.html', {
-            'service_provider': service_provider,
-            'ratings': ratings,
-        })
+        return render(request, 'rating_list.html', {'service_provider': service_provider,'ratings': ratings,})
 
 
 @method_decorator(decs,name="dispatch")
