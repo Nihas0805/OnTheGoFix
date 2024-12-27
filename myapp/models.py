@@ -116,6 +116,8 @@ class BreakdownRequest(BaseModel):
 
     service_types = models.ManyToManyField(ServiceType, related_name='breakdown_requests')  
 
+    vehicle_name=models.CharField(max_length=200,blank=True,null=True)
+
     description = models.TextField(null=True,blank=True)
 
     image = models.ImageField(upload_to='images/', blank=True, null=True)

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnTheGoFix</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+        }
+        .top-section {
+            position: relative;
+            height: 60%;
+            background: url('https://media.gettyimages.com/id/510058550/photo/cvt-gearbox-repair-closeup.jpg?s=612x612&w=0&k=20&c=S03b9mo8kXNdV0h4s0VF26LaOeE-NcclVix5FVEbjfs=') no-repeat center center/cover;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .glass-overlay {
+    background: rgba(0, 0, 0, 0.3);  /* Very transparent background */
+    width: 80%;
+    height: 80%;
+    border-radius: 20px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+
+        .glass-overlay h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .glass-overlay p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        .get-started-btn {
+            background-color: #ff0000;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+        .header {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .header .login-btn {
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+        .bottom-section {
+            height: 40%;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            padding: 20px;
+            background-color: #333;
+        }
+        .service-box {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .service-box:hover {
+            transform: scale(1.05);
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.2);
+        }
+        .service-box img {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 10px;
+        }
+        .service-box p {
+            margin: 0;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Top Section -->
+        <div class="top-section">
+            <div class="header">
+                <a href="{%url 'signin'%}" class="login-btn">Login</a>
+            </div>
+            <div class="glass-overlay">
+                <h1>Welcome to OnTheGoFix</h1>
+                <p>Your online breakdown and service assistance. Get the best vehicle repair and maintenance services at your fingertips.</p>
+                <a href="{%url 'signup'%}" class="get-started-btn">Get Started</a>
+            </div>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="bottom-section">
+            <div class="service-box">
+                <img src="https://cdn-icons-png.flaticon.com/512/3096/3096673.png" alt="Break Down Icon">
+                <p>Break Down</p>
+            </div>
+            <div class="service-box">
+                <img src="https://cdn-icons-png.flaticon.com/512/3011/3011270.png" alt="Mechanical Repairs Icon">
+                <p>Mechanical Repairs</p>
+            </div>
+            <div class="service-box">
+                <img src="https://cdn-icons-png.flaticon.com/512/1086/1086650.png" alt="Basic Maintenance Icon">
+                <p>Basic Maintenance</p>
+            </div>
+            <div class="service-box">
+                <img src="https://cdn-icons-png.flaticon.com/512/1034/1034046.png" alt="Electrical System Icon">
+                <p>Electrical System</p>
+            </div>
+            <div class="service-box">
+                <img src="https://cdn-icons-png.flaticon.com/512/2362/2362623.png" alt="Clutch Repairs Icon">
+                <p>Clutch Repairs</p>
+            </div>
+            <div class="service-box">
+                <img src="https://cdn-icons-png.flaticon.com/512/2061/2061618.png" alt="Wheel Alignment Icon">
+                <p>Wheel Alignment</p>
+            </div>
+            <div class="service-box">
+                <img src="https://cdn-icons-png.flaticon.com/512/3050/3050514.png" alt="Oil Change Icon">
+                <p>Oil Change</p>
+            </div>
+            <div class="service-box">
+                <img src="https://cdn-icons-png.flaticon.com/512/1207/1207917.png" alt="Engine Repair Icon">
+                <p>Engine Repair</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

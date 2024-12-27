@@ -3,84 +3,91 @@
 {% block main_block %}
 <div class="my-12 w-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-screen">
     <h2 class="text-2xl font-bold text-gray-800 mb-6">Service Provider Dashboard</h2>
-    <form action="" method="get" >
-        <select name="status" id="" class="form-select bg-light text-dark mx-2" onchange="this.form.submit()">
-            <option value="all" {%if selected == "all"%} selected {%endif%}>All</option>
-            <option value="accepted" {%if selected == "accepted"%} selected {%endif%}>Accepted</option>
-            <option value="pick_up" {%if selected == "pick_up"%} selected {%endif%}>Picked Up</option>
-            <option value="in_progress" {%if selected == "in_progress"%} selected {%endif%}>In Progress</option>
-            <option value="completed" {%if selected == "completed "%} selected {%endif%}>Completed</option>
-            <!-- <option value="cancelled" {%if selected == "cancelled "%} selected {%endif%}>Cancelled</option> -->
 
+    <!-- Total Breakdown Request Counts -->
+    <div class="mb-6 p-4 bg-gray-100 rounded-lg shadow">
+        <h3 class="text-lg font-bold text-gray-900">Summary</h3>
+        <p class="mt-1 text-sm text-gray-700">Total Breakdown Requests : <strong>{{ total_requests }}</strong></p>
+        <ul class="mt-2 list-disc list-inside">
+            {% for count in breakdown_counts %}
+            <li>{{ count.status|capfirst }}: {{ count.count }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <form action="" method="get">
+        <select name="status" id="" class="form-select bg-light text-dark mx-2" onchange="this.form.submit()">
+            <option value="all" {% if selected == "all" %} selected {% endif %}>All</option>
+            <option value="accepted" {% if selected == "accepted" %} selected {% endif %}>Accepted</option>
+            <option value="pick_up" {% if selected == "pick_up" %} selected {% endif %}>Picked Up</option>
+            <option value="in_progress" {% if selected == "in_progress" %} selected {% endif %}>In Progress</option>
+            <option value="completed" {% if selected == "completed" %} selected {% endif %}>Completed</option>
         </select>
 
-    <a href="{% url 'provider-history' %}" class="text-blue-600 hover:underline mb-4 block">Previous History</a>
+        <a href="{% url 'provider-history' %}" class="text-blue-600 hover:underline mb-4 block">Previous History</a>
 
-    {% for item in data %}
-    <div class="relative block overflow-hidden rounded-lg border border-gray-100 p-6 mb-6 shadow-sm hover:shadow-md transition-shadow">
-        <span class="absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r from-green-300 via-blue-500 to-purple-600"></span>
+        {% for item in data %}
+        <div class="relative block overflow-hidden rounded-lg border border-gray-100 p-6 mb-6 shadow-sm hover:shadow-md transition-shadow">
+            <span class="absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r from-green-300 via-blue-500 to-purple-600"></span>
 
-        <div class="sm:flex sm:justify-between sm:items-center sm:gap-4">
-            <div>
-                <h3 class="text-lg font-bold text-gray-900 sm:text-xl">
-                    Request by {{ item.request.customer.username }}
-                </h3>
-                <p class="mt-1 text-sm font-medium text-gray-600">
-                    {{ item.request.created_date|date:"M d, Y h:i A" }}
-                </p>
+            <div class="sm:flex sm:justify-between sm:items-center sm:gap-4">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 sm:text-xl">
+                        Request by {{ item.request.customer.username }}
+                    </h3>
+                    <p class="mt-1 text-sm font-medium text-gray-600">
+                        {{ item.request.created_date|date:"M d, Y h:i A" }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h4 class="text-sm font-bold text-gray-700">Vehicle Types and Services:</h4>
+                <div class="mt-2 space-y-3">
+                    {% if item.grouped_services.two_wheeler %}
+                    <div>
+                        <strong class="block">Two Wheeler:</strong>
+                        <ul class="list-disc list-inside ml-4">
+                            {% for service in item.grouped_services.two_wheeler %}
+                            <li>{{ service.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if item.grouped_services.four_wheeler %}
+                    <div>
+                        <strong class="block">Four Wheeler:</strong>
+                        <ul class="list-disc list-inside ml-4">
+                            {% for service in item.grouped_services.four_wheeler %}
+                            <li>{{ service.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if item.grouped_services.others %}
+                    <div>
+                        <strong class="block">Others:</strong>
+                        <ul class="list-disc list-inside ml-4">
+                            {% for service in item.grouped_services.others %}
+                            <li>{{ service.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mt-6 flex items-center gap-4">
+                <a href="{% url 'breakdownrequestprovider-detail' item.request.id %}" 
+                   class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 shadow">
+                    Detail
+                </a>
             </div>
         </div>
-
-        <!-- Service Type Listing (by Vehicle Type) -->
-        <div class="mt-4">
-            <h4 class="text-sm font-bold text-gray-700">Vehicle Types and Services:</h4>
-            <div class="mt-2 space-y-3">
-                {% if item.grouped_services.two_wheeler %}
-                <div>
-                    <strong class="block">Two Wheeler:</strong>
-                    <ul class="list-disc list-inside ml-4">
-                        {% for service in item.grouped_services.two_wheeler %}
-                        <li>{{ service.name }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-
-                {% if item.grouped_services.four_wheeler %}
-                <div>
-                    <strong class="block">Four Wheeler:</strong>
-                    <ul class="list-disc list-inside ml-4">
-                        {% for service in item.grouped_services.four_wheeler %}
-                        <li>{{ service.name }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-
-                {% if item.grouped_services.others %}
-                <div>
-                    <strong class="block">Others:</strong>
-                    <ul class="list-disc list-inside ml-4">
-                        {% for service in item.grouped_services.others %}
-                        <li>{{ service.name }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-
-        <!-- Buttons -->
-        <div class="mt-6 flex items-center gap-4">
-            <a href="{% url 'breakdownrequestprovider-detail' item.request.id %}" 
-               class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 shadow">
-                Detail
-            </a>
-        </div>
-    </div>
-    {% empty %}
-    <p class="text-center text-gray-500">No breakdown requests available.</p>
-    {% endfor %}
+        {% empty %}
+        <p class="text-center text-gray-500">No breakdown requests available.</p>
+        {% endfor %}
 </div>
 {% endblock %}

@@ -4,13 +4,21 @@ from myapp.models import User,ServiceProviderProfile,ServiceType,BreakdownReques
 
 from django.contrib.auth.forms import UserCreationForm
 
+
 class SignUpForm(UserCreationForm):
-
     class Meta:
+        model = User
+        fields = ['username', 'email', 'role', 'phone_number', 'password1', 'password2']
 
-        model=User
-
-        fields= ['username', 'email', 'role', 'phone_number', 'password1', 'password2']
+    def __init__(self, *args, **kwargs):
+        super(SignUpForm, self).__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.help_text = None  # Remove help text
+            field.label = ''  # Remove labels, if desired
+            # Apply Bootstrap 'form-control' class to each field
+            field.widget.attrs.update({'class': 'form-control'})
+          
+        
 
 class SignInForm(forms.Form):
 
@@ -75,6 +83,11 @@ class BreakdownRequestCreateForm(forms.ModelForm):
         required=False,
         label="Address"
     )
+    vehicle_name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        required=False,
+        label="Vehicle Model"
+    )
 
     
     service_types = forms.ModelMultipleChoiceField(
@@ -89,7 +102,7 @@ class BreakdownRequestCreateForm(forms.ModelForm):
 
     class Meta:
         model = BreakdownRequest
-        fields = ['description', 'image', 'latitude', 'longitude', 'service_types']
+        fields = ['description', 'image', 'latitude', 'longitude', 'service_types','vehicle_name']
 
     def __init__(self, *args, **kwargs):
         service_provider = kwargs.pop('service_provider', None)

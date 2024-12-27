@@ -30,6 +30,8 @@ from django.views.decorators.cache import never_cache
 
 from myapp.decorators import signin_required
 
+from django.db.models import Count
+
 from django.db.models import Q 
 
 
@@ -70,6 +72,13 @@ def send_otp_email(user):
 
     send_mail(subject,message,from_email,to_email)
 
+from django.shortcuts import render
+
+def landing_page(request):
+    
+
+    # Render the template with the services list
+    return render(request, 'landing.html')
 
 
 
@@ -195,9 +204,9 @@ class ProviderIndexView(View):
                 {
                     "request": requests,
                     "grouped_services": {
-                        'two_wheeler': requests.service_types.filter(vehicle_type='two_wheeler'),
-                        'four_wheeler': requests.service_types.filter(vehicle_type='four_wheeler'),
-                        'others': requests.service_types.filter(vehicle_type='others'),
+                        'Two Wheeler': requests.service_types.filter(vehicle_type='two_wheeler'),
+                        'Four Wheeler': requests.service_types.filter(vehicle_type='four_wheeler'),
+                        'Others': requests.service_types.filter(vehicle_type='others'),
                     }
                 }
             )
@@ -319,9 +328,9 @@ class ProviderProfileView(View):
 
         
         grouped_services = {
-            'two_wheeler': profile.service_types.filter(vehicle_type='two_wheeler') if profile else [],
-            'four_wheeler': profile.service_types.filter(vehicle_type='four_wheeler') if profile else [],
-            'others': profile.service_types.filter(vehicle_type='others') if profile else [],
+            'Two Wheeler': profile.service_types.filter(vehicle_type='two_wheeler'),
+            'Four Wheeler': profile.service_types.filter(vehicle_type='four_wheeler'),
+            'Others': profile.service_types.filter(vehicle_type='others'),
         }
 
         
@@ -390,9 +399,9 @@ class ProviderBreakdownRequestDetailView(View):
         payment = Payment.objects.filter(breakdown_request=request_instance).first()
 
         grouped_services = {
-            'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
-            'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
-            'others': request_instance.service_types.filter(vehicle_type='others'),
+            'Two Wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
+            'Four Wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
+            'Others': request_instance.service_types.filter(vehicle_type='others'),
         }
 
         
@@ -421,9 +430,9 @@ class CustomerBreakdownRequestDetailView(View):
 
         
         grouped_services = {
-            'two_wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
-            'four_wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
-            'others': request_instance.service_types.filter(vehicle_type='others'),
+            'Two Wheeler': request_instance.service_types.filter(vehicle_type='two_wheeler'),
+            'Four Wheeler': request_instance.service_types.filter(vehicle_type='four_wheeler'),
+            'Others': request_instance.service_types.filter(vehicle_type='others'),
         }
 
         context = {
@@ -542,28 +551,32 @@ class ServiceProviderDashboardView(View):
     template_name = "provider_dashboard.html"
 
     def get(self, request, *args, **kwargs):
-        
         search_keyword = request.GET.get("search", "").strip()
-        selected_status=request.GET.get("status","all")
+        selected_status = request.GET.get("status", "all")
 
         if search_keyword:
-            
             qs = BreakdownRequest.objects.filter(service_provider=request.user).filter(
                 Q(customer__username__icontains=search_keyword) |
                 Q(service_types__name__icontains=search_keyword) |
                 Q(service_types__vehicle_type__icontains=search_keyword)
             ).distinct()
-        else:    
-            if selected_status =="all":
-                    
-                qs = BreakdownRequest.objects.filter(service_provider=request.user).exclude(status__in=['delivered','pending','cancelled']).order_by('-created_date')
-                
+        else:
+            if selected_status == "all":
+                qs = BreakdownRequest.objects.filter(service_provider=request.user).exclude(
+                    status__in=['delivered', 'pending', 'cancelled']
+                ).order_by('-created_date')
             else:
-                    
-                qs=BreakdownRequest.objects.filter(status=selected_status,service_provider=request.user).order_by('-created_date')
+                qs = BreakdownRequest.objects.filter(
+                    status=selected_status, service_provider=request.user
+                ).order_by('-created_date')
 
-        breakdown_data = []  
+        # Counts by Status
+        breakdown_counts = BreakdownRequest.objects.filter(service_provider=request.user).exclude(
+            status__in=['delivered', 'pending', 'cancelled']
+        ).values('status').annotate(count=Count('id'))
 
+        # Prepare breakdown data
+        breakdown_data = []
         for requests in qs:
             breakdown_data.append(
                 {
@@ -573,12 +586,24 @@ class ServiceProviderDashboardView(View):
                         'four_wheeler': requests.service_types.filter(vehicle_type='four_wheeler'),
                         'others': requests.service_types.filter(vehicle_type='others'),
                     },
-                    "status": requests.get_status_display(),  
+                    "status": requests.get_status_display(),
                 }
             )
 
+        # Total count
+        total_requests = sum(item['count'] for item in breakdown_counts)
 
-        return render(request, self.template_name, {"data": breakdown_data,"selected": selected_status,"search_keyword": search_keyword})
+        return render(
+            request,
+            self.template_name,
+            {
+                "data": breakdown_data,
+                "selected": selected_status,
+                "search_keyword": search_keyword,
+                "total_requests": total_requests,
+                "breakdown_counts": breakdown_counts,
+            },
+        )
 
 
 

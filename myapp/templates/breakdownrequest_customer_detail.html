@@ -41,7 +41,12 @@
           {% endif %}
         {% endfor %}
         
-
+        <div class="mt-4">
+            <p class="text-sm text-gray-500">
+                <strong>Vehicle Model:</strong> {{ request.vehicle_name }}
+            </p>
+        </div>
+        
         <div class="mt-4">
             <p class="text-sm text-gray-500">
                 <strong>Description:</strong> {{ request.description }}
@@ -63,6 +68,15 @@
                 {%if payment%}
                 <dt class="text-sm font-medium text-gray-600">Payment status</dt>
                 <dd class="text-xs text-gray-500">{{ payment.get_payment_status_display }}</dd>
+                {%endif%}
+            </div> 
+            {%endif%}
+
+            {%if request.status == "completed"%}
+            <div class="flex flex-col-reverse">
+                {%if payment%}
+                <dt class="text-sm font-medium text-gray-600">Amount to be payed</dt>
+                <dd class="text-xs text-gray-500">{{ payment.amount }}</dd>
                 {%endif%}
             </div> 
             {%endif%}

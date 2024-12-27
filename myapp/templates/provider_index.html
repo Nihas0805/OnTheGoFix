@@ -17,12 +17,12 @@
     <!-- Customer Details -->
     <div class="mb-4">
       <p class="text-gray-600"><strong>Customer Username:</strong> {{ d.request.customer.username }}</p>
-      <p class="text-gray-600"><strong>Phone Number:</strong> {{ d.request.customer.phone_number }}</p>
       <p class="text-gray-600"><strong>Customer Address:</strong> {{ d.request.customer.customer_profile.address }}</p>
     </div>
 
     <!-- Service Details -->
     <div class="mb-4">
+
       <p class="text-gray-600"><strong>Service Details:</strong></p>
       {% for vehicle_type, services in d.grouped_services.items %}
         {% if services.exists %}
@@ -36,6 +36,7 @@
           </ul>
         {% endif %}
       {% endfor %}
+      <p class="text-gray-600"><strong>Vehicle Model:</strong> {{ d.request.vehicle_name }}</p>
       <p class="text-gray-600"><strong>Description:</strong> {{ d.request.description }}</p>
     </div>
 

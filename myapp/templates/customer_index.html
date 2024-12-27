@@ -56,39 +56,50 @@
       <p class="text-sm lg:text-base text-gray-700 font-bold">Vehicle Type and Services:</p>
 
       {% for vehicle_type in vehicle_types %}
-        {% with p.service_types.all|dictsort:"vehicle_type" as services %}
-        {% if services %}
-        <!-- Vehicle Type Header -->
-        <div class="mb-4">
-          <h4 class="font-bold text-gray-700 mt-4 cursor-pointer"
-              onclick="toggleElement('vehicle-type-{{ p.user.id }}-{{ vehicle_type }}')">
-            {{ vehicle_type|capfirst }}
-          </h4>
-
-          <!-- Service Types Under Vehicle Type -->
-          <div id="vehicle-type-{{ p.user.id }}-{{ vehicle_type }}" class="hidden mt-2 pl-4">
-            {% for service in services %}
-              {% if service.vehicle_type == vehicle_type %}
-              <div class="mb-2">
-                <!-- Service Type Name -->
-                <span class="cursor-pointer text-blue-600 hover:underline"
-                      onclick="toggleElement('service-{{ p.user.id }}-{{ service.id }}')">
-                  {{ service.name }}
-                </span>
-
-                <!-- Service Description (Initially Hidden) -->
-                <div id="service-{{ p.user.id }}-{{ service.id }}"
-                     class="hidden mt-2 p-2 bg-gray-100 border border-gray-300 rounded-lg shadow">
-                  <p class="text-xs text-gray-500">{{ service.description }}</p>
-                </div>
+      {% with p.service_types.all|dictsort:"vehicle_type" as services %}
+      {% if services %}
+      <!-- Vehicle Type Header -->
+      <div class="mb-4">
+        <h4 class="font-bold text-gray-700 mt-4 cursor-pointer"
+            onclick="toggleElement('vehicle-type-{{ p.user.id }}-{{ vehicle_type }}')">
+          {% if vehicle_type == 'two_wheeler' %}
+            Two wheeler
+          {% elif vehicle_type == 'four_wheeler' %}
+            Four Wheeler
+          {% elif vehicle_type == 'others' %}
+            Others
+          {% else %}
+            Unknown
+          {% endif %}
+        </h4>
+  
+        <!-- Service Types Under Vehicle Type -->
+        <div id="vehicle-type-{{ p.user.id }}-{{ vehicle_type }}" class="hidden mt-2 pl-4">
+          {% for service in services %}
+            {% if service.vehicle_type == vehicle_type %}
+            <div class="mb-2">
+              <!-- Service Type Name -->
+              <span class="cursor-pointer text-blue-600 hover:underline"
+                    onclick="toggleElement('service-{{ p.user.id }}-{{ service.id }}')">
+                {{ service.name }}
+              </span>
+  
+              <!-- Service Description (Initially Hidden) -->
+              <div id="service-{{ p.user.id }}-{{ service.id }}"
+                   class="hidden mt-2 p-2 bg-gray-100 border border-gray-300 rounded-lg shadow">
+                <p class="text-xs text-gray-500">{{ service.description }}</p>
               </div>
-              {% endif %}
-            {% endfor %}
-          </div>
+            </div>
+            {% endif %}
+          {% endfor %}
         </div>
-        {% endif %}
-        {% endwith %}
-      {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+  {% endfor %}
+  
+
+
     </div>
 
     <!-- Address Section -->

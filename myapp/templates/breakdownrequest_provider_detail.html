@@ -48,6 +48,11 @@
             
             <div class="mt-4">
                 <p class="text-sm text-gray-500">
+                    <strong>Vehicle Model:</strong> {{ request.vehicle_name }}
+                </p>
+            </div>
+            <div class="mt-4">
+                <p class="text-sm text-gray-500">
                     <strong>Description:</strong> {{ request.description }}
                 </p>
             </div>
@@ -80,7 +85,7 @@
                 {% endif %}
                 {% if request.status == "pick_up" or request.status == "in_progress" or request.status == "completed" %}
                 <div class="flex flex-col">
-                    <dt class="text-sm font-medium text-gray-600">Delivery has to done by by</dt>
+                    <dt class="text-sm font-medium text-gray-600">Delivery has to done by</dt>
                     <dd class="text-xs text-gray-500">{{ request.estimated_date|date:"l jS F Y" }}</dd>
                 </div>
                 {% endif %}

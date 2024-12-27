@@ -3,14 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Registration</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-image: url('https://media.istockphoto.com/id/1554627149/photo/auto-mechanic-are-repair-and-maintenance-auto-engine-is-problems-at-car-repair-shop.webp?a=1&b=1&s=612x612&w=0&k=20&c=NTeuWJfi6RHJWQ5zpXTMG2Wm0b_KY7mfBB3decEMa3k='); /* Background Image */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+        }
+
+        .form-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+            backdrop-filter: blur(10px); /* Apply blur effect to the background */
+            border-radius: 10px;
+            padding: 30px;
+            width: 80%;
+            max-width: 1000px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+        }
+
+        .form-container .image-section {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .form-container .image-section img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .form-container .form-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-container .form-section h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            color: #fff;
+        }
+
+        .form-container .form-section form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-container .form-section form .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-container .form-section form input,
+        .form-container .form-section form select {
+            padding: 10px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+        }
+
+        .form-container .form-section form button {
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .form-container .form-section form button:hover {
+            background-color: #cc0000;
+        }
+
+        .form-container .form-section label {
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .link a {
+            color: #ff0000;
+            text-decoration: none;
+        }
+
+        .link a:hover {
+            text-decoration: underline;
+        }
+
+    </style>
 </head>
 <body>
-    <h1>Registration</h1>
-    <form action="" method="post">
-        {%csrf_token%}
-        {{form}}
-        <button type="submit">Register</button>
-    </form>
+    <div class="form-container">
+        <!-- Image Section (on the left) -->
+        <div class="image-section">
+            <img src="https://plus.unsplash.com/premium_photo-1661411128818-08593b7738ba?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fGNhciUyMHNlcnZpY2V8ZW58MHx8MHx8fDA%3D" alt="Vehicle Service Image">
+        </div>
+
+        <!-- Form Section (on the right) -->
+        <div class="form-section">
+            <h1>Registration</h1>
+            <form action="" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}">Username</label>
+                    {{ form.username }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">Email</label>
+                    {{ form.email }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.role.id_for_label }}">Role</label>
+                    {{ form.role }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
+                    {{ form.phone_number }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.password1.id_for_label }}">Password</label>
+                    {{ form.password1 }}
+                </div>
+                <div class="form-group">
+                    <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+                    {{ form.password2 }}
+                </div>
+                <button type="submit">Register</button>
+            </form>
+            <div class="link">
+                <a href="{% url 'signin' %}">Already have an account?</a>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
