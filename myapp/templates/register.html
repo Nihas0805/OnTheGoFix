@@ -8,7 +8,7 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background-image: url('https://media.istockphoto.com/id/1554627149/photo/auto-mechanic-are-repair-and-maintenance-auto-engine-is-problems-at-car-repair-shop.webp?a=1&b=1&s=612x612&w=0&k=20&c=NTeuWJfi6RHJWQ5zpXTMG2Wm0b_KY7mfBB3decEMa3k='); /* Background Image */
+            background-image: url('https://wallpapercave.com/wp/wp3992741.jpg');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -16,15 +16,16 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            color: white;
+            color: black;
+            background-color: black;
         }
 
         .form-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
-            backdrop-filter: blur(10px); /* Apply blur effect to the background */
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
             border-radius: 10px;
             padding: 30px;
             width: 80%;
@@ -50,6 +51,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
+            align-items: center;
         }
 
         .form-container .form-section h1 {
@@ -60,96 +62,101 @@
         }
 
         .form-container .form-section form {
+            width: 100%;
+            max-width: 350px;
             display: flex;
             flex-direction: column;
+            align-items: center;
         }
 
         .form-container .form-section form .form-group {
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
+            margin-bottom: 25px;
+            width: 100%;
         }
 
         .form-container .form-section form input,
         .form-container .form-section form select {
-            padding: 10px;
-            font-size: 1rem;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
             border: none;
-            border-radius: 5px;
-            background-color: #333;
+            border-radius: 15px;
+            background-color: rgba(255, 255, 255, 0.2);
             color: white;
         }
 
+        .form-container .form-section form select option {
+            background-color: rgba(50, 50, 50, 1);
+            color: white;
+        }
+
+        .form-container .form-section form input:focus,
+        .form-container .form-section form select:focus {
+            outline: none;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+        }
+
+        .form-container .form-section form input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
         .form-container .form-section form button {
-            background-color: #ff0000;
+            width: 50%;
+            padding: 10px;
+            font-size: 1rem;
+            background-color: red;
             color: white;
             border: none;
-            padding: 10px 15px;
-            font-size: 1rem;
-            border-radius: 5px;
+            border-radius: 15px;
             cursor: pointer;
         }
 
         .form-container .form-section form button:hover {
-            background-color: #cc0000;
+            background-color: #ff4d4d;
         }
 
-        .form-container .form-section label {
-            color: white;
-            margin-bottom: 5px;
-        }
-
-        .link {
+        .form-container .form-section .link {
             text-align: center;
             margin-top: 15px;
         }
 
-        .link a {
+        .form-container .form-section .link a {
             color: #ff0000;
             text-decoration: none;
         }
 
-        .link a:hover {
+        .form-container .form-section .link a:hover {
             text-decoration: underline;
         }
-
     </style>
 </head>
 <body>
     <div class="form-container">
-        <!-- Image Section (on the left) -->
         <div class="image-section">
             <img src="https://plus.unsplash.com/premium_photo-1661411128818-08593b7738ba?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fGNhciUyMHNlcnZpY2V8ZW58MHx8MHx8fDA%3D" alt="Vehicle Service Image">
         </div>
 
-        <!-- Form Section (on the right) -->
         <div class="form-section">
             <h1>Registration</h1>
             <form action="" method="post">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label for="{{ form.username.id_for_label }}">Username</label>
-                    {{ form.username }}
+                    <input type="text" name="username" placeholder="Username" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="{{ form.email.id_for_label }}">Email</label>
-                    {{ form.email }}
+                    <input type="email" name="email" placeholder="Email" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="{{ form.role.id_for_label }}">Role</label>
                     {{ form.role }}
                 </div>
                 <div class="form-group">
-                    <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
-                    {{ form.phone_number }}
+                    <input type="text" name="phone_number" placeholder="Phone Number" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="{{ form.password1.id_for_label }}">Password</label>
-                    {{ form.password1 }}
+                    <input type="password" name="password1" placeholder="Password" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
-                    {{ form.password2 }}
+                    <input type="password" name="password2" placeholder="Confirm Password" class="form-control" required>
                 </div>
                 <button type="submit">Register</button>
             </form>

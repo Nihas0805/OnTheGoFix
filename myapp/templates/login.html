@@ -3,16 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Login Page</title>
+    <style>
+        /* Base Styles */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: black; /* Full-screen black background */
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center; /* Centers the content vertically and horizontally */
+        }
+
+        /* Outer Wrapper for 75% Div */
+        .container {
+            width: 1300px;
+            height: 75%; /* Occupies 75% of the height */
+            display: flex;
+            border-radius: 25px; /* Rounded corners for the container */
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7); /* Stronger shadow effect */
+        }
+
+        /* Left Side - Image Section */
+        .left-section {
+            flex: 1;
+            background-image: url("https://plus.unsplash.com/premium_photo-1661411128818-08593b7738ba?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fGNhciUyMHNlcnZpY2V8ZW58MHx8MHx8fDA%3D"); /* Replace with your image URL */
+            background-size: cover;
+            background-position: center;
+            backdrop-filter: blur(10px); /* Glass Effect for Image */
+            border-top-left-radius: 25px; /* Round the top-left corner */
+            border-bottom-left-radius: 25px; /* Round the bottom-left corner */
+        }
+
+        /* Right Side - Login Form Section */
+        .right-section {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08); /* Slightly more transparent background */
+            backdrop-filter: blur(10px); /* Blurry glass effect */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            border-top-right-radius: 25px; /* Round the top-right corner */
+            border-bottom-right-radius: 25px; /* Round the bottom-right corner */
+        }
+
+        /* Form Heading */
+        .right-section h1 {
+            color: white; /* White text */
+            margin-bottom: 20px;
+        }
+
+        /* Form Styling */
+        .login-form {
+            width: 100%;
+            max-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center elements */
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 15px; /* Rounded input fields */
+            background: rgba(255, 255, 255, 0.2); /* Slightly transparent white input background */
+            color: white; /* White text in inputs */
+            text-align: left;
+        }
+
+        .login-form input:focus {
+            outline: none;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+        }
+
+        .login-form input::placeholder {
+            color: rgba(255, 255, 255, 0.7); /* White placeholder text */
+        }
+
+        .login-form button {
+    width: 50%; /* Adjust button width */
+    padding: 10px;
+    font-size: 1rem;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 15px; /* Rounded button */
+    cursor: pointer;
+    text-align: center; /* Ensures text is centered */
+}
+
+        .login-form button:hover {
+            background-color: #ff4d4d;
+        }
+
+        /* Additional Links */
+        .right-section a {
+            color: white; /* White links */
+            text-decoration: none;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .right-section a:hover {
+            text-decoration: underline;
+        }
+
+        /* Adjust text for additional paragraphs */
+        .right-section p {
+            color: white; /* White text */
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
-    <h1>Login</h1>
-    <form action="" method="post" class="">
-            
-    {%csrf_token%}
-    {{form}}
-    <button type="submit" class=" my-3  h-100 form-control bg-info text-light">Login</button>
-    Dont have an account<a href="{%url 'signup'%}">Sign up</a><br>
-    <a href="{%url 'password-reset'%}">Forgot Password</a>
+    <div class="container">
+        <!-- Left Image Section -->
+        <div class="left-section"></div>
+
+        <!-- Right Login Form Section -->
+        <div class="right-section">
+            <h1>Login</h1>
+            <form action="" method="post" class="login-form">
+                {% csrf_token %}
+                <input type="text" name="username" placeholder="Username" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+            <p>Don't have an account? <a href="{% url 'signup' %}">Sign up</a></p>
+            <p><a href="{% url 'password-reset' %}">Forgot Password?</a></p>
+        </div>
+    </div>
 </body>
 </html>

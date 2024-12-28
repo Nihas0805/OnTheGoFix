@@ -3,24 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>OTP Verification</title>
+    <style>
+        /* Style for the whole page */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: black; /* Black background */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Outer container with 75% height and width */
+        .outer-container {
+            width: 75%;
+            height: 75%;
+            background: url('https://wallpapercave.com/wp/wp3992741.jpg') no-repeat center;
+            background-size: cover;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Inner glass-like div */
+        .inner-container {
+            width: 300px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+            backdrop-filter: blur(15px); /* Glass effect with blur */
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Heading text */
+        .inner-container h1 {
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        /* Input field */
+        .inner-container input {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+            outline: none;
+        }
+
+        /* Submit button */
+        .inner-container button {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        /* Hover effect for the button */
+        .inner-container button:hover {
+            background-color: #cc0000;
+        }
+    </style>
 </head>
 <body>
-
-    {%if messages%}
-    {%for m in messages%}
-    {{m}}
-    {%endfor%}
-    {%endif%}
-    <form action="" method="post">
-        {%csrf_token%}
-
-
-        <label for="">Enter otp</label>
-        <input type="text" name="otp">
-
-
-        <button type="submit">Verify</button>
-    </form>
+    <div class="outer-container">
+        <div class="inner-container">
+            <h1>Enter OTP to Verify</h1>
+            <form action="" method="post">
+                {% csrf_token %}
+                <input type="text" name="otp" placeholder="Enter OTP" required> <!-- Added name="otp" -->
+                <button type="submit">Verify</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

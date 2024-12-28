@@ -50,3 +50,6 @@ def notify_on_breakdown_request(sender, instance, created, **kwargs):
             body="Your service request has been completed and delivered.",
             recipient_list=[customer.email]
         )
+
+
+        
