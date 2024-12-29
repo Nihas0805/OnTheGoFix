@@ -337,10 +337,27 @@ class ProviderProfileView(View):
         return render(request, self.template_name, {"profile": profile,"grouped_services": grouped_services,})
 
 
+class CustomerIndexDetailView(View):
+
+    template_name = "customer_index_detail_view.html"
+
+    def get(self, request, *args, **kwargs):
+
+        id=kwargs.get("pk")
+    
+        qs = ServiceProviderProfile.objects.prefetch_related('service_types').filter(id=id).first()
+
+        
+        grouped_services = {
+            'Two Wheeler': qs.service_types.filter(vehicle_type='two_wheeler'),
+            'Four Wheeler': qs.service_types.filter(vehicle_type='four_wheeler'),
+            'Others': qs.service_types.filter(vehicle_type='others'),
+        }
+
+        
+        return render(request, self.template_name, {"data": qs,"grouped_services": grouped_services,})
 
 
-
-   
 
 
 @method_decorator(decs,name="dispatch")
@@ -352,30 +369,36 @@ class BreakdownRequestCreateView(View):
 
     def get(self, request, *args, **kwargs):
         service_provider_id = kwargs.get('service_provider_id')
-        service_provider = ServiceProviderProfile.objects.filter(user_id=service_provider_id).first()
-
         
 
+        service_provider = ServiceProviderProfile.objects.filter(id=service_provider_id).first()
+        
+
+        
         form_instance = self.form_class(service_provider=service_provider, user=request.user)
-        return render(request, self.template_name, {'form': form_instance, 'service_provider': service_provider})
+
+        return render(request, self.template_name, {
+            'form': form_instance,
+            'service_provider': service_provider,
+        })
 
     def post(self, request, *args, **kwargs):
         service_provider_id = kwargs.get('service_provider_id')
-        service_provider = ServiceProviderProfile.objects.filter(user_id=service_provider_id).first()
 
-
+        service_provider = ServiceProviderProfile.objects.filter(id=service_provider_id).first()
+        
+        
         form_instance = self.form_class(request.POST, request.FILES, service_provider=service_provider, user=request.user)
 
         if form_instance.is_valid():
-
+            
             breakdown_request = form_instance.save(commit=False)
             breakdown_request.customer = request.user
             breakdown_request.service_provider = service_provider.user
             breakdown_request.save()
-            messages.success(request,"Request send")
+            messages.success(request, "Request sent")
             form_instance.save_m2m()
 
-            
             customer_address = form_instance.cleaned_data.get('customer_address')
             if request.user.customer_profile:
                 request.user.customer_profile.address = customer_address
@@ -383,9 +406,11 @@ class BreakdownRequestCreateView(View):
 
             return redirect('customer-index')
 
-        return render(request, self.template_name, {'form': form, 'service_provider': service_provider})
-
-
+        
+        return render(request, self.template_name, {
+            'form': form_instance,
+            'service_provider': service_provider,
+        })
 
 @method_decorator(decs,name="dispatch")
 class ProviderBreakdownRequestDetailView(View):
@@ -440,9 +465,7 @@ class CustomerBreakdownRequestDetailView(View):
             "grouped_services": grouped_services,
             "payment": payment,  
         }
-        return render(request, self.template_name, context)
-
-          
+        return render(request, self.template_name, context)         
 
 
 @method_decorator(decs,name="dispatch")

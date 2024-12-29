@@ -6,9 +6,11 @@
   <!-- Loop through all service providers -->
   {% for p in providers %}
   <div
-    class="w-full sm:w-[48%] lg:w-[48%] xl:w-[48%] relative block overflow-hidden rounded-lg border-2 border-gray-200 shadow-lg transition-shadow duration-300 hover:shadow-xl hover:border-gray-400 p-6 lg:p-12"
+    class="w-full sm:w-[48%] lg:w-[48%] xl:w-[48%] relative block overflow-hidden rounded-lg border-2 border-white shadow-lg transition-shadow duration-300 hover:shadow-xl hover:border-gray-400 p-6 lg:p-12 cursor-pointer"
     id="provider-card-{{ p.user.id }}"
-  >
+    onclick="window.location.href='{% url 'customer-index-detail' p.id %}'"
+    style="background-color: black; color: white; border: 1px solid white;" <!-- Dark background, white text, thin white border -->
+
     <span
       class="absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r from-green-300 via-blue-500 to-purple-600"
     ></span>
@@ -16,21 +18,22 @@
     <!-- Header Section with Username and Profile Picture -->
     <div class="flex justify-between items-center gap-4">
       <div>
-        <h3 class="text-xl lg:text-2xl font-bold text-gray-900">
-          {{ p.user.username }}  
+        <h3 class="text-xl lg:text-2xl font-bold text-white">
+          {{ p.user.username }}
         </h3>
 
-        <p class="mt-1 text-sm font-medium text-gray-600">
+        <p class="mt-1 text-sm font-medium text-white">
           Status: {{ p.availability_status|yesno:"Available,Not Available" }}
         </p>
-        <p class="mt-1 text-sm font-medium text-gray-600">
+        <p class="mt-1 text-sm font-medium text-white">
           <span>
-            Rating: {{ p.display_stars }} ({{ p.total_reviews }} reviews)
-        </span>
+            Rating: {{ p.display_stars }} ({{ p.total_reviews }} )
+          </span>
+          <a href="{% url 'rating_list' p.user.id %}" class="text-blue-300 hover:underline">view reviews</a>
         </p>
 
-        <p class="mt-1 text-sm font-medium text-gray-600">
-          <a href="{%url 'rating_list' p.user.id%}">ratings</a>
+        <p class="mt-1 text-sm font-medium text-white">
+          
         </p>
       </div>
 
@@ -51,73 +54,72 @@
       </div>
     </div>
 
-    <!-- Vehicle Types and Services -->
+    <!-- Services Provided Section -->
     <div class="mt-6">
-      <p class="text-sm lg:text-base text-gray-700 font-bold">Vehicle Type and Services:</p>
+      <p class="text-sm lg:text-base text-white font-bold">Services Provided:</p>
 
-      {% for vehicle_type in vehicle_types %}
-      {% with p.service_types.all|dictsort:"vehicle_type" as services %}
-      {% if services %}
-      <!-- Vehicle Type Header -->
-      <div class="mb-4">
-        <h4 class="font-bold text-gray-700 mt-4 cursor-pointer"
-            onclick="toggleElement('vehicle-type-{{ p.user.id }}-{{ vehicle_type }}')">
-          {% if vehicle_type == 'two_wheeler' %}
-            Two wheeler
-          {% elif vehicle_type == 'four_wheeler' %}
-            Four Wheeler
-          {% elif vehicle_type == 'others' %}
-            Others
-          {% else %}
-            Unknown
-          {% endif %}
-        </h4>
-  
-        <!-- Service Types Under Vehicle Type -->
-        <div id="vehicle-type-{{ p.user.id }}-{{ vehicle_type }}" class="hidden mt-2 pl-4">
-          {% for service in services %}
-            {% if service.vehicle_type == vehicle_type %}
+      <div class="flex space-x-4">
+        <div>
+          <h4 class="font-bold text-white mt-4 cursor-pointer"
+              onclick="toggleElement('vehicle-type-{{ p.user.id }}-two_wheeler')">
+            Two Wheeler
+          </h4>
+          <div id="vehicle-type-{{ p.user.id }}-two_wheeler" class="hidden mt-2 pl-4">
+            {% with p.service_types.all|dictsort:"vehicle_type" as services %}
+            {% for service in services %}
+            {% if service.vehicle_type == 'two_wheeler' %}
             <div class="mb-2">
-              <!-- Service Type Name -->
-              <span class="cursor-pointer text-blue-600 hover:underline"
+              <span class="cursor-pointer text-blue-300 hover:underline"
                     onclick="toggleElement('service-{{ p.user.id }}-{{ service.id }}')">
                 {{ service.name }}
               </span>
-  
-              <!-- Service Description (Initially Hidden) -->
               <div id="service-{{ p.user.id }}-{{ service.id }}"
                    class="hidden mt-2 p-2 bg-gray-100 border border-gray-300 rounded-lg shadow">
                 <p class="text-xs text-gray-500">{{ service.description }}</p>
               </div>
             </div>
             {% endif %}
-          {% endfor %}
+            {% endfor %}
+            {% endwith %}
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-white mt-4 cursor-pointer"
+              onclick="toggleElement('vehicle-type-{{ p.user.id }}-four_wheeler')">
+            Four Wheeler
+          </h4>
+          <div id="vehicle-type-{{ p.user.id }}-four_wheeler" class="hidden mt-2 pl-4">
+            {% with p.service_types.all|dictsort:"vehicle_type" as services %}
+            {% for service in services %}
+            {% if service.vehicle_type == 'four_wheeler' %}
+            <div class="mb-2">
+              <span class="cursor-pointer text-blue-300 hover:underline"
+                    onclick="toggleElement('service-{{ p.user.id }}-{{ service.id }}')">
+                {{ service.name }}
+              </span>
+              <div id="service-{{ p.user.id }}-{{ service.id }}"
+                   class="hidden mt-2 p-2 bg-gray-100 border border-gray-300 rounded-lg shadow">
+                <p class="text-xs text-gray-500">{{ service.description }}</p>
+              </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% endwith %}
+          </div>
         </div>
       </div>
-      {% endif %}
-      {% endwith %}
-  {% endfor %}
-  
-
-
     </div>
 
     <!-- Address Section -->
     <dl class="mt-6 flex gap-4 sm:gap-6">
       <div class="flex flex-col-reverse">
-        <dt class="text-sm lg:text-base font-medium text-gray-600">
+        <dt class="text-sm lg:text-base font-medium text-white">
           Address: {{ p.address }}
         </dt>
       </div>
     </dl>
 
-    <!-- Request Service Button -->
-    <div class="mt-6 flex justify-center">
-      <a href="{% url 'create-breakdownrequest' service_provider_id=p.user.id %}"
-         class="block text-center bg-blue-600 text-white text-lg font-bold py-2 rounded-lg w-[75%] transition-colors duration-300 hover:bg-blue-700">
-        Request Service
-      </a>
-    </div>
   </div>
   {% empty %}
   <p class="text-gray-500">No Service Providers Available</p>

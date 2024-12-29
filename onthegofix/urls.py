@@ -26,6 +26,9 @@ urlpatterns = [
     path('signup/', views.SignUpView.as_view(),name="signup"),
     path('veriify/email/', views.VerifyEmailView.as_view(),name="verify-email"),
     path('customer/index/', views.CustomerIndexView.as_view(),name="customer-index"),
+    path('customer/index/detail/<int:pk>/', views.CustomerIndexDetailView.as_view(),name="customer-index-detail"),
+
+
     path('provider/index/', views.ProviderIndexView.as_view(),name="provider-index"),
     path('logout/',views.LogoutView.as_view(),name='signout'),
     path("get-location/<int:request_id>/", views.ProviderIndexView.as_view(), name="get_location"),

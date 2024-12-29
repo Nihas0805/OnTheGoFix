@@ -137,6 +137,8 @@ class BreakdownRequestCreateForm(forms.ModelForm):
                 grouped[service.vehicle_type].append(service)
         return grouped
 
+        
+
 
 
 
