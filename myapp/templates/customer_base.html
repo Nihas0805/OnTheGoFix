@@ -175,30 +175,30 @@
             <a href="{%url 'customer-index'%}">Home</a>
         </div>
        <!-- Search Box -->
-<!-- Search Box -->
-<div class="relative flex-1 max-w-xs ml-4">
-  <form method="get" action="" class="flex items-center w-full">
-    <div class="relative flex-1">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-        aria-hidden="true"
-        class="absolute left-2.5 top-1/2 size-5 -translate-y-1/2 text-neutral-600/50 dark:text-neutral-300/50">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-      </svg>
-      <input 
-        type="search" 
-        name="search" 
-        value="{{ search_keyword|default:'' }}" 
-        placeholder="Search" 
-        aria-label="search" 
-        class="w-full rounded-l-md border border-neutral-300 bg-neutral-50 py-2.5 pl-10 pr-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black disabled:cursor-not-allowed disabled:opacity-75 dark:border-neutral-700 dark:bg-neutral-900/50 dark:focus-visible:outline-white" />
-    </div>
-    <button type="submit" 
-      class="px-4 py-2 border border-neutral-400 bg-transparent text-white rounded-r-md hover:bg-white hover:text-black focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-      Search
-    </button>
-  </form>
-</div>
+
+    <div class="relative flex-1 max-w-xs ml-4">
+        <form method="get" action="" class="flex items-center w-full">
+            <div class="relative flex-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                    aria-hidden="true"
+                    class="absolute left-2.5 top-1/2 size-5 -translate-y-1/2 text-neutral-600/50 dark:text-neutral-300/50">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+                <input 
+                    type="search" 
+                    name="search" 
+                    value="{{ search_keyword|default:'' }}" 
+                    placeholder="Search" 
+                    aria-label="search" 
+                    class="w-48 rounded-3xl border border-neutral-300 bg-neutral-50 py-2.5 pl-10 pr-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black disabled:cursor-not-allowed disabled:opacity-75 dark:border-neutral-700 dark:bg-neutral-900/50 dark:focus-visible:outline-white" />
+            </div>
+        </form>
+        
+      </div>
+      
+    
+
 
 
       
@@ -234,6 +234,40 @@
                 overlay.classList.add('active');
             }
         }
+        document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('input[name="search"]');
+  
+    // Function to handle search input
+    searchInput.addEventListener('input', function() {
+        const keyword = searchInput.value.trim(); // Get the trimmed input value
+        
+        if (keyword === "") {
+            // If input is empty, remove the search parameter from URL
+            history.pushState(null, "", window.location.pathname);
+            // Optionally, you can reset the page content to show all items
+        } else {
+            // Update URL with search keyword
+            const url = new URL(window.location);
+            url.searchParams.set('search', keyword);
+            history.pushState(null, "", url.toString()); // Update the URL without reloading
+        }
+
+        // Call a function to dynamically filter content (e.g., make an AJAX call or filter locally)
+        filterContent(keyword); // This is a custom function you would need to define
+    });
+  
+    // Function to simulate dynamic content filtering (example)
+    function filterContent(keyword) {
+        // If you want to filter data dynamically, you can fetch or filter data here
+        console.log("Filtering results for: " + keyword);
+        // Example: make an AJAX request to the server or filter locally
+        // fetch('/search-api?query=' + keyword)
+        //   .then(response => response.json())
+        //   .then(data => { updateUI(data); });
+    }
+});
+
+
     </script>
     <div class="mt-20"> <!-- Adjust margin to match navbar height -->
       <div class="row">

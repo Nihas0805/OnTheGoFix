@@ -1,33 +1,153 @@
 {% extends 'customer_base.html' %}
 
+{% block styles %}
+<style>
+    /* Full-screen black background with a semi-transparent overlay */
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background-color: black;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Transparent full-screen container */
+    .fullscreen-container {
+        position: fixed;
+        top: 50px; /* Push down the container to avoid the navbar */
+        left: 0;
+        width: 100%;
+        height: calc(100% - 50px); /* Adjust height to account for navbar */
+        background: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Form container styling */
+    .form-container {
+        width: 70%; /* Reduced width */
+        max-width: 600px; /* Set a smaller max-width */
+        background: #333333; /* Set background to black */
+        padding: 30px; /* Reduced padding */
+        border-radius: 25px;
+        backdrop-filter: blur(15px); /* Increased blurriness for glass effect */
+        box-shadow: 0 8px 30px rgba(128, 128, 128, 0.8); /* Grey shadow around form */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    /* Styling form fields */
+    .form-group {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+    }
+
+    label {
+        color: white;
+        font-size: 1.1rem;
+    }
+
+    /* Button styling */
+    .form-buttons .relative.inline-flex.group .absolute {
+        transition: all 1s;
+        opacity: 0.7;
+        inset: -1px;
+        background: linear-gradient(to right, #44BCFF, #FF44EC, #FF675E);
+        border-radius: 15px;
+        blur: 8px;
+    }
+
+    .form-buttons .relative.inline-flex.group:hover .absolute {
+        opacity: 1;
+        inset: -2px;
+        transition-duration: 200ms;
+    }
+
+    .form-buttons button[type="submit"] {
+        padding: 10px 20px;
+        font-size: 1.2rem;
+        background-color: black;
+        color: white;
+        border: none;
+        border-radius: 15px;
+        cursor: pointer;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        max-width: 300px; /* Ensuring it doesn't overly stretch */
+    }
+
+    .form-buttons button[type="submit"]:hover {
+        background-color: black;
+    }
+</style>
+{% endblock %}
+
 {% block main_block %}
+<div class="fullscreen-container">
+    <form method="post" class="form-container">
+        {% csrf_token %}
+        <h2 class="text-center text-white-500 mb-5">Edit Profile</h2>
 
+        <!-- Username -->
+        <div class="form-group">
+            <label for="id_username">Username</label>
+            {{ form.username }}
+        </div>
 
+        <!-- Email -->
+        <div class="form-group">
+            <label for="id_email">Email</label>
+            {{ form.email }}
+        </div>
 
-  <h2>Edit Profile</h2>
-  <form method="post">
-    {% csrf_token %}
-    <div class="form-group">
-        <label for="id_username">Username</label>
-        {{ form.username }}
-    </div>
+        <!-- Phone Number -->
+        <div class="form-group">
+            <label for="id_phone_number">Phone Number</label>
+            {{ form.phone_number }}
+        </div>
 
-    <div class="form-group">
-        <label for="id_email">Email</label>
-        {{ form.email }}
-    </div>
-    <div class="form-group">
-        <label for="id_email">Phone Number</label>
-        {{ form.phone_number }}
-    </div>
+        <!-- Address -->
+        <div class="form-group">
+            <label for="id_address">Address</label>
+            {{ form.address }}
+        </div>
 
-    <div class="form-group">
-        <label for="id_address">Address</label>
-        {{ form.address }}
-    </div>
-
-    <button type="submit" class="btn btn-primary">Save Changes</button>
-  </form>
-
-
+        <!-- Submit Button -->
+        <div class="form-buttons">
+            <div class="relative inline-flex group">
+                <div
+                    class="absolute transition-all duration-1000 opacity-70 -inset-px bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200">
+                </div>
+                <button type="submit" title="updateq"
+                    class="relative inline-flex items-center justify-center px-8 py-2 text-lg font-bold text-white transition-all duration-200 bg-black font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                    role="button">Update Profile
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
 {% endblock %}

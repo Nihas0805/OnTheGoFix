@@ -3,52 +3,57 @@
 {% load static %}
 
 <!-- Check if a profile exists -->
-{% if data %}
-<a
-  href="#"
-  class="relative block overflow-hidden rounded-lg border border-gray-100 p-4 sm:p-6 lg:p-8"
->
-  <span
-    class="absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r from-green-300 via-blue-500 to-purple-600"
-  ></span>
+<div class="mt-16 mx-auto max-w-sm">
+  {% if data %}
+  <div
+    class="relative block overflow-hidden rounded-lg shadow-xl border border-white bg-black text-gray-100"
+  >
+    <!-- Vehicle Cover Photo -->
+    <div class="rounded-t-lg h-48 overflow-hidden">
+      <img
+        class="object-cover object-center w-full h-full"
+        src="https://wallpapercave.com/wp/WR4WVIP.jpg"
+        alt="Vehicle Cover"
+      />
+    </div>
 
-  <div class="sm:flex sm:justify-between sm:gap-4">
-    <div class="flex items-center gap-4">
-      <h3 class="text-lg font-bold text-gray-900 sm:text-xl">
-        {{ data.user.username }}      
+    <!-- User Details -->
+    <div class="p-6">
+      <h3 class="text-lg font-bold text-center text-white sm:text-xl">
+        {{ data.user.username }}
       </h3>
 
-      <!-- Update Profile Button -->
-      <a href="{% url 'customer-edit' %}"
-         class="ml-4 px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring">
-         Update Profile
-      </a>
-    </div>
-    <div class="mt-4">
-        <p class="text-pretty text-sm text-gray-500">
-         Phone Number : {{data.user.phone_number}}
+      <div class="mt-4">
+        <p class="text-sm text-gray-300">
+          <strong>Phone Number:</strong> {{ data.user.phone_number }}
+        </p>
+        <p class="mt-2 text-sm text-gray-300">
+          <strong>E-Mail:</strong> {{ data.user.email }}
+        </p>
+        <p class="mt-2 text-sm text-gray-300">
+          <strong>Address:</strong> {{ data.address }}
         </p>
       </div>
-    
-  </div>
 
-  <div class="mt-4">
-    <p class="text-pretty text-sm text-gray-500">
-     E-Mail : {{data.user.email}}
-    </p>
-  </div>
-
-  <dl class="mt-6 flex gap-4 sm:gap-6">
-    <div class="flex flex-col-reverse">
-      <dt class="text-sm font-medium text-gray-600">Address: {{ data.address }}</dt>
-      <dd class="text-xs text-gray-500"></dd>
+      <!-- Centered Profile Button with URL -->
+      <div class="form-buttons mt-6 flex justify-center">
+          <div class="relative inline-flex group">
+              <div
+                  class="absolute transition-all duration-1000 opacity-70 -inset-px bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200">
+              </div>
+              <a href="{% url 'customer-edit' %}" title="Update Profile"
+                 class="relative inline-flex items-center justify-center px-8 py-2 text-lg font-bold text-white transition-all duration-200 bg-black font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
+                  Update Profile
+              </a>
+          </div>
+      </div>
     </div>
-  </dl>
-  
-</a>
-{% else %}
-<p class="text-center text-gray-600">No profile available for the logged-in user.</p>
-
-{% endif %}
+  </div>
+  {% else %}
+  <p class="text-center text-gray-600">
+    No profile available for the logged-in user.
+  </p>
+  {% endif %}
+</div>
 
 {% endblock %}

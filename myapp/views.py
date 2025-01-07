@@ -30,7 +30,7 @@ from django.views.decorators.cache import never_cache
 
 from myapp.decorators import signin_required
 
-from django.db.models import Count
+from django.db.models import Count,Avg
 
 from django.db.models import Q 
 
@@ -76,8 +76,6 @@ from django.shortcuts import render
 
 def landing_page(request):
     
-
-    # Render the template with the services list
     return render(request, 'landing.html')
 
 
@@ -377,10 +375,7 @@ class BreakdownRequestCreateView(View):
         
         form_instance = self.form_class(service_provider=service_provider, user=request.user)
 
-        return render(request, self.template_name, {
-            'form': form_instance,
-            'service_provider': service_provider,
-        })
+        return render(request, self.template_name, {'form': form_instance,'service_provider': service_provider,})
 
     def post(self, request, *args, **kwargs):
         service_provider_id = kwargs.get('service_provider_id')
@@ -407,10 +402,7 @@ class BreakdownRequestCreateView(View):
             return redirect('customer-index')
 
         
-        return render(request, self.template_name, {
-            'form': form_instance,
-            'service_provider': service_provider,
-        })
+        return render(request, self.template_name, {'form': form_instance,'service_provider': service_provider, })
 
 @method_decorator(decs,name="dispatch")
 class ProviderBreakdownRequestDetailView(View):
@@ -576,6 +568,7 @@ class ServiceProviderDashboardView(View):
     def get(self, request, *args, **kwargs):
         search_keyword = request.GET.get("search", "").strip()
         selected_status = request.GET.get("status", "all")
+        statuses = ['all', 'accepted', 'pick_up', 'in_progress', 'completed']
 
         if search_keyword:
             qs = BreakdownRequest.objects.filter(service_provider=request.user).filter(
@@ -593,12 +586,11 @@ class ServiceProviderDashboardView(View):
                     status=selected_status, service_provider=request.user
                 ).order_by('-created_date')
 
-        # Counts by Status
         breakdown_counts = BreakdownRequest.objects.filter(service_provider=request.user).exclude(
             status__in=['delivered', 'pending', 'cancelled']
         ).values('status').annotate(count=Count('id'))
 
-        # Prepare breakdown data
+       
         breakdown_data = []
         for requests in qs:
             breakdown_data.append(
@@ -612,8 +604,6 @@ class ServiceProviderDashboardView(View):
                     "status": requests.get_status_display(),
                 }
             )
-
-        # Total count
         total_requests = sum(item['count'] for item in breakdown_counts)
 
         return render(
@@ -625,6 +615,7 @@ class ServiceProviderDashboardView(View):
                 "search_keyword": search_keyword,
                 "total_requests": total_requests,
                 "breakdown_counts": breakdown_counts,
+                'statuses': statuses,
             },
         )
 
@@ -636,36 +627,33 @@ from django.http import Http404,HttpResponse,HttpResponseNotFound
 @method_decorator(decs,name="dispatch")
 class SetPaymentAmountView(View):
     def get(self, request, *args, **kwargs):
-        pk = kwargs.get('pk')  # Retrieve the primary key from URL
+        pk = kwargs.get('pk')  
         breakdown_request = BreakdownRequest.objects.filter(pk=pk).first()
 
         if not breakdown_request:
             raise Http404("Breakdown Request not found.")
 
-        # Check if the service provider is the logged-in user
         if breakdown_request.service_provider != request.user:
             raise Http404("You are not authorized to access this request.")
 
-        # Check if the BreakdownRequest status is 'completed'
+       
         if breakdown_request.status != 'completed':
             return render(request, 'set_payment_amount.html', {
                 'breakdown_request': breakdown_request,
                 'error': "Payment can only be initiated after the request is completed.",
             })
 
-        # Check for existing Payment; do not create if it doesn't exist
         try:
             payment = Payment.objects.get(breakdown_request=breakdown_request)
         except Payment.DoesNotExist:
-            payment = None  # Set to None if it doesn't exist
-
+            payment = None  
         return render(request, 'set_payment_amount.html', {
             'breakdown_request': breakdown_request,
             'payment': payment,
         })
 
     def post(self, request, *args, **kwargs):
-        pk = kwargs.get('pk')  # Retrieve the primary key from URL
+        pk = kwargs.get('pk') 
         breakdown_request = BreakdownRequest.objects.filter(pk=pk).first()
 
         if not breakdown_request:
@@ -680,7 +668,7 @@ class SetPaymentAmountView(View):
                 'error': "Payment can only be initiated after the request is completed.",
             })
 
-        # Get the amount from the POST data
+        
         amount = request.POST.get('amount')
         if not amount or int(amount) <= 0:
             return render(request, 'set_payment_amount.html', {
@@ -688,18 +676,18 @@ class SetPaymentAmountView(View):
                 'error': "Invalid amount provided.",
             })
 
-        # Fetch or create the Payment object
+       
         payment, created = Payment.objects.get_or_create(
             breakdown_request=breakdown_request,
-            defaults={'amount': int(amount)}  # Default payment_method
+            defaults={'amount': int(amount)}  
         )
 
-        if not created:  # Update the amount if Payment already exists
+        if not created:  
             payment.amount = int(amount)
             payment.save()
             messages.success(request,"Payment initiated successfully")
 
-        return redirect('provider-dashboard')  # Redirect to the next page
+        return redirect('provider-dashboard')  
 
 
 @method_decorator(decs,name="dispatch")
@@ -793,7 +781,7 @@ class CustomerPaymentView(View):
         if payment_method == 'razorpay':
             client = razorpay.Client(auth=(config('KEY_ID'), config('KEY_SECRET')))
             razorpay_order = client.order.create({
-                "amount": payment.amount * 100,  # Convert to paisa
+                "amount": payment.amount * 100, 
                 "currency": "INR",
                 "receipt": f"order_rcptid_{payment.id}",
             })
@@ -813,7 +801,7 @@ class CustomerPaymentView(View):
             })
 
         elif payment_method == 'cod':
-            if payment.payment_status != 'completed':  # Double-check for cod payments
+            if payment.payment_status != 'completed':  
                 payment.payment_method = 'cod'
                 payment.payment_status = 'completed'
                 payment.save()
@@ -830,7 +818,7 @@ class CustomerPaymentView(View):
 class PaymentVerificationView(View):
     def post(self, request, *args, **kwargs):
         try:
-            # Parse JSON body
+           
             body = json.loads(request.body)
 
             razorpay_order_id = body.get('razorpay_order_id')
@@ -840,7 +828,7 @@ class PaymentVerificationView(View):
             if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature]):
                 return JsonResponse({"error": "Incomplete Razorpay parameters."}, status=400)
 
-            # Verify Razorpay signature
+            
             client = razorpay.Client(auth=(config('KEY_ID'), config('KEY_SECRET')))
             client.utility.verify_payment_signature({
                 'razorpay_order_id': razorpay_order_id,
@@ -848,7 +836,7 @@ class PaymentVerificationView(View):
                 'razorpay_signature': razorpay_signature,
             })
 
-            # Update payment record
+            
             payment = Payment.objects.get(razorpay_order_id=razorpay_order_id)
             payment.razorpay_payment_id = razorpay_payment_id
             payment.razorpay_signature = razorpay_signature
@@ -891,56 +879,76 @@ class CustomerHistoryView(View):
 
 
 
-@method_decorator(decs,name="dispatch")
-class CreateRatingView(View):
 
+@method_decorator(decs, name="dispatch")
+class CreateRatingView(View):
     form_class = RatingForm
+
     def get(self, request, *args, **kwargs):
         id = kwargs.get('pk')
-
         breakdown_request = BreakdownRequest.objects.get(id=id)
-    
-        form_instance = self.form_class
+        service_provider = breakdown_request.service_provider
+        star_range = list(range(1, 6))[::1]  
 
-        return render(request, 'create_rating.html', {'form': form_instance,'service_provider': breakdown_request.service_provider,'breakdown_request': breakdown_request,})
+        ratings = Rating.objects.filter(service_provider=service_provider)
+        total_reviews = ratings.count()
+
+        rating_counts = ratings.values('rating').annotate(count=Count('rating'))
+        rating_percentages = {str(i): 0 for i in star_range}  
+
+        if total_reviews > 0:
+            for count in rating_counts:
+                rating_percentages[str(count['rating'])] = (count['count'] / total_reviews) * 100
+
+        average_rating = ratings.aggregate(Avg('rating'))['rating__avg'] or 0.0
+
+        return render(request, 'create_rating.html', {
+            'form': self.form_class(),
+            'service_provider': service_provider,
+            'breakdown_request': breakdown_request,
+            'average_rating': average_rating,
+            'rating_percentages': rating_percentages,
+            'total_reviews': total_reviews,
+            'star_range': star_range,
+            'selected_rating': None,
+        })
 
     def post(self, request, *args, **kwargs):
         id = kwargs.get('pk')
-
         breakdown_request = BreakdownRequest.objects.get(id=id)
-        
-        
-        form_instance = RatingForm(request.POST)
+        form_instance = self.form_class(request.POST)
+
         if form_instance.is_valid():
-            # Save the rating
             rating = form_instance.save(commit=False)
             rating.breakdown_request = breakdown_request
             rating.service_provider = breakdown_request.service_provider
             rating.save()
-            messages.success(request,"Service has been rated")
+            messages.success(request, "Service has been rated")
 
             service_provider_profile = ServiceProviderProfile.objects.get(user=breakdown_request.service_provider)
             service_provider_profile.update_rating()
-            
-            return redirect('customer-history')  # Replace with your desired redirect path
+
+            return redirect('customer-history')
         else:
-            return render(request, 'create_rating.html', {'form': form_instance,'service_provider': breakdown_request.service_provider,'breakdown_request': breakdown_request, })
-
-
+            return self.get(request, *args, **kwargs)
 
 
 @method_decorator(decs,name="dispatch")
 class RatingListView(View):
     def get(self, request, *args, **kwargs):
-        service_provider_id = kwargs.get('pk')  
+        service_provider_id = kwargs.get('pk')
 
-        service_provider = ServiceProviderProfile.objects.get(user_id=service_provider_id)  
-      
-        ratings = Rating.objects.filter(service_provider_id=service_provider_id).select_related('breakdown_request__customer')
+        service_provider = ServiceProviderProfile.objects.get(user_id=service_provider_id)
+
         
-        return render(request, 'rating_list.html', {'service_provider': service_provider,'ratings': ratings,})
+        ratings = Rating.objects.filter(service_provider_id=service_provider_id).select_related('breakdown_request__customer')
 
+        service_provider.update_rating()
 
+        return render(request, 'rating_list.html', {
+            'service_provider': service_provider,
+            'ratings': ratings,
+        })
 @method_decorator(decs,name="dispatch")
 class PasswordResestView(View):
 

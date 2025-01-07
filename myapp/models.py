@@ -94,6 +94,7 @@ class ServiceProviderProfile(BaseModel):
         self.average_rating = ratings['average'] or 0.0
         self.total_reviews = ratings['count'] or 0
         self.save()
+        
     
     
 

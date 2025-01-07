@@ -121,6 +121,24 @@
             margin-top: 10px;
             font-size: 0.9rem;
         }
+        .logo-container {
+    display: flex;
+    align-items: center; /* Align items vertically */
+    margin-bottom: 20px; /* Add spacing below the logo */
+}
+
+.logo-container img {
+    width: 50px; /* Adjust size of the logo */
+    height: 50px;
+    margin-right: 10px; /* Space between the logo and text */
+}
+
+.logo-container .logo-text {
+    color: white; /* White text for the logo name */
+    font-size: 1.5rem; /* Adjust font size */
+    font-weight: bold;
+}
+
     </style>
 </head>
 <body>
@@ -130,6 +148,10 @@
 
         <!-- Right Login Form Section -->
         <div class="right-section">
+            <div class="logo-container">
+                <img src="https://img.icons8.com/ios-filled/50/ffffff/car-service.png" alt="Logo">
+                <div class="logo-text">OnTheGoFix</div>
+            </div>
             <h1>Login</h1>
             <form action="" method="post" class="login-form">
                 {% csrf_token %}
@@ -140,6 +162,7 @@
             <p>Don't have an account? <a href="{% url 'signup' %}">Sign up</a></p>
             <p><a href="{% url 'password-reset' %}">Forgot Password?</a></p>
         </div>
+        
     </div>
 </body>
 </html>

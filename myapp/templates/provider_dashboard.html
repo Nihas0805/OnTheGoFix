@@ -2,92 +2,111 @@
 
 {% block main_block %}
 <div class="my-12 w-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-screen">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Service Provider Dashboard</h2>
-
     <!-- Total Breakdown Request Counts -->
-    <div class="mb-6 p-4 bg-gray-100 rounded-lg shadow">
-        <h3 class="text-lg font-bold text-gray-900">Summary</h3>
-        <p class="mt-1 text-sm text-gray-700">Total Breakdown Requests : <strong>{{ total_requests }}</strong></p>
-        <ul class="mt-2 list-disc list-inside">
-            {% for count in breakdown_counts %}
-            <li>{{ count.status|capfirst }}: {{ count.count }}</li>
-            {% endfor %}
-        </ul>
+    <div class="mb-6 p-6 bg-white rounded-lg shadow-lg flex justify-between items-center">
+        <div>
+            <h3 class="text-lg font-bold text-gray-900">Summary</h3>
+            <h4>Total: {{ breakdown_counts|length }}</h4>
+            <ul class="mt-2 list-disc list-inside text-sm text-gray-700">
+                
+                {% for count in breakdown_counts %}
+                <li>{{ count.status|capfirst }}: {{ count.count }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="w-32 h-32">
+            <canvas id="summaryPieChart"></canvas>
+        </div>
     </div>
 
-    <form action="" method="get">
-        <select name="status" id="" class="form-select bg-light text-dark mx-2" onchange="this.form.submit()">
-            <option value="all" {% if selected == "all" %} selected {% endif %}>All</option>
-            <option value="accepted" {% if selected == "accepted" %} selected {% endif %}>Accepted</option>
-            <option value="pick_up" {% if selected == "pick_up" %} selected {% endif %}>Picked Up</option>
-            <option value="in_progress" {% if selected == "in_progress" %} selected {% endif %}>In Progress</option>
-            <option value="completed" {% if selected == "completed" %} selected {% endif %}>Completed</option>
-        </select>
-
-        <a href="{% url 'provider-history' %}" class="text-blue-600 hover:underline mb-4 block">Previous History</a>
-
-        {% for item in data %}
-        <div class="relative block overflow-hidden rounded-lg border border-gray-100 p-6 mb-6 shadow-sm hover:shadow-md transition-shadow">
-            <span class="absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r from-green-300 via-blue-500 to-purple-600"></span>
-
-            <div class="sm:flex sm:justify-between sm:items-center sm:gap-4">
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900 sm:text-xl">
-                        Request by {{ item.request.customer.username }}
-                    </h3>
-                    <p class="mt-1 text-sm font-medium text-gray-600">
-                        {{ item.request.created_date|date:"M d, Y h:i A" }}
-                    </p>
+    <!-- Status Filter -->
+    <form action="" method="get" class="flex justify-center my-4">
+        <div class="flex space-x-4">
+            {% for status in statuses %}
+            <label class="relative">
+                <input type="radio" name="status" value="{{ status }}" class="peer hidden" onchange="this.form.submit()" {% if selected == status %} checked {% endif %}>
+                <div class="w-32 h-12 bg-gray-100 rounded-full flex items-center justify-center text-sm font-medium text-gray-700 cursor-pointer peer-checked:bg-blue-500 peer-checked:text-white">
+                    {{ status|capfirst }}
                 </div>
-            </div>
+            </label>
+            {% endfor %}
+        </div>
+    </form>
 
-            <div class="mt-4">
-                <h4 class="text-sm font-bold text-gray-700">Vehicle Types and Services:</h4>
-                <div class="mt-2 space-y-3">
-                    {% if item.grouped_services.two_wheeler %}
-                    <div>
-                        <strong class="block">Two Wheeler:</strong>
-                        <ul class="list-disc list-inside ml-4">
-                            {% for service in item.grouped_services.two_wheeler %}
-                            <li>{{ service.name }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
-
-                    {% if item.grouped_services.four_wheeler %}
-                    <div>
-                        <strong class="block">Four Wheeler:</strong>
-                        <ul class="list-disc list-inside ml-4">
-                            {% for service in item.grouped_services.four_wheeler %}
-                            <li>{{ service.name }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
-
-                    {% if item.grouped_services.others %}
-                    <div>
-                        <strong class="block">Others:</strong>
-                        <ul class="list-disc list-inside ml-4">
-                            {% for service in item.grouped_services.others %}
-                            <li>{{ service.name }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="mt-6 flex items-center gap-4">
-                <a href="{% url 'breakdownrequestprovider-detail' item.request.id %}" 
-                   class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 shadow">
-                    Detail
-                </a>
+    <!-- Breakdown Request Cards -->
+    {% for item in data %}
+    <a href="{% url 'breakdownrequestprovider-detail' item.request.id %}" class="block mb-6 overflow-hidden rounded-lg border border-gray-200 shadow-lg transition-transform transform hover:scale-105 bg-white p-6">
+        <div class="sm:flex sm:justify-between sm:items-center sm:gap-4">
+            <div>
+                <h3 class="text-lg font-bold text-gray-900 sm:text-xl">
+                    Request by {{ item.request.customer.username }}
+                </h3>
+                <p class="mt-1 text-sm font-medium text-gray-600">
+                    {{ item.request.created_date|date:"M d, Y h:i A" }}
+                </p>
             </div>
         </div>
-        {% empty %}
-        <p class="text-center text-gray-500">No breakdown requests available.</p>
-        {% endfor %}
+
+        <div class="mt-4">
+            <h4 class="text-sm font-bold text-gray-700">Vehicle Types and Services:</h4>
+            <div class="mt-2 space-y-3">
+                {% for vehicle_type, services in item.grouped_services.items %}
+                {% if services %}
+                <div>
+                    <strong class="block">{{ vehicle_type|capfirst }}:</strong>
+                    <ul class="list-disc list-inside ml-4">
+                        {% for service in services %}
+                        <li class="transition-colors hover:text-blue-500">{{ service.name }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <dl class="mt-6 flex gap-4 sm:gap-6">
+            {% if item.request.status == "accepted" %}
+            <div class="flex flex-col">
+                <dt class="text-sm font-medium text-gray-600">Pick up has to be done by</dt>
+                <dd class="text-xs text-gray-500">{{ item.request.estimated_date|date:"l jS F Y" }}</dd>
+            </div>
+            {% endif %}
+            {% if item.request.status == "pick_up" or item.request.status == "in_progress" or item.request.status == "completed" %}
+            <div class="flex flex-col">
+                <dt class="text-sm font-medium text-gray-600">Delivery has to be done by</dt>
+                <dd class="text-xs text-gray-500">{{ item.request.estimated_date|date:"l jS F Y" }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+    </a>
+    {% empty %}
+    <p class="text-center text-gray-500">No breakdown requests available.</p>
+    {% endfor %}
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Pie Chart Data
+    var ctx = document.getElementById('summaryPieChart').getContext('2d');
+    var chartData = {
+        labels: [
+            {% for count in breakdown_counts %}
+            "{{ count.status|capfirst }}",
+            {% endfor %}
+        ],
+        datasets: [{
+            data: [
+                {% for count in breakdown_counts %}
+                {{ count.count }},
+                {% endfor %}
+            ],
+            backgroundColor: ['#4CAF50', '#FF9800', '#2196F3', '#9C27B0', '#F44336']
+        }]
+    };
+
+    var summaryPieChart = new Chart(ctx, {
+        type: 'pie',
+        data: chartData
+    });
+</script>
 {% endblock %}

@@ -83,13 +83,19 @@
       </div>
     </div>
 
-    <!-- Request Service Button -->
-    <div class="text-center">
-      <a href="{% url 'create-breakdownrequest' service_provider_id=data.id %}" 
-         class="text-lg font-semibold py-3 px-6 rounded-full bg-red-600 text-white hover:bg-red-700 transition-all duration-300">
-        Request Service
-      </a>
+   <!-- Request Service Button -->
+<div class="flex justify-center items-center">
+  <div class="relative inline-flex group">
+    <div
+        class="absolute transition-all duration-1000 opacity-70 -inset-px bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt">
     </div>
+    <a href="{% url 'create-breakdownrequest' service_provider_id=data.id %}" title="Request"
+        class="relative inline-flex items-center justify-center px-8 py-3 text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+        role="button">Request Service
+    </a>
+  </div>
+</div>
+
 
   </div>
 

@@ -1,34 +1,157 @@
-{%extends 'customer_base.html'%}
-{%block main_block%}
-<h1>Create Rating</h1>
+{% extends 'customer_base.html' %}
 
-    <!-- Service Provider Information -->
-    <p><strong>Service Provider:</strong> {{ service_provider.username }}</p>
+{% block styles %}
+<style>
+    /* Styling for the review card with solid black background and grey shadow */
+    .review-card {
+        background-color: #000000; /* Solid black background */
+        color: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(51, 51, 51, 0.7), 0 0 15px rgba(51, 51, 51, 0.3); /* Grey shadow effect around the border */
+        border: 1px solid white; /* Thin white border around the card */
+    }
 
-    <!-- Breakdown Request Details -->
-    <h2>Breakdown Request Details</h2>
-    <p><strong>Vehicle Type:</strong> 
-        {% for service_type in breakdown_request.service_types.all %}
-            {{ service_type.vehicle_type|capfirst }}
-        {% empty %}
-            N/A
+    /* Initial grey stars */
+    .rating-star {
+        color: #333333; /* Grey color */
+        text-shadow: none;
+        padding: 5px;
+        cursor: pointer;
+        font-size: 2rem;
+        transition: color 0.3s ease-in-out, text-shadow 0.3s ease-in-out;
+    }
+
+    /* Full white stars when selected */
+    .rating-star.selected,
+    .rating-star:hover {
+        color: white; /* Fully white when selected or hovered */
+        text-shadow: 0 0 0.2em rgba(255, 255, 255, 0.7); /* Glow effect */
+    }
+
+    /* Hide radio buttons */
+    input[type="radio"] {
+        display: none;
+    }
+
+    /* Progress bar styling */
+    .rating-bar-background {
+        background-color: #333; /* Dark gray */
+        border-radius: 5px;
+        height: 8px;
+    }
+
+    .rating-bar-fill {
+        background-color: white;
+        height: 100%;
+        border-radius: 5px;
+        transition: width 0.3s ease-in-out;
+    }
+</style>
+{% endblock %}
+
+{% block main_block %}
+<div class="p-8 mx-auto bg-black max-w-6xl sm:p-8 grid grid-cols-1 lg:grid-cols-6 gap-6 rating-container">
+    <div class="lg:col-span-4 col-span-1">
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <h2 class="text-3xl font-semibold text-white mb-4">Write a review</h2>
+
+            <!-- Star Rating Section -->
+            <div class="flex justify-start items-center space-x-1 mb-4">
+                {% for i in star_range %}
+                    <input
+                        type="radio"
+                        id="{{ i }}-stars"
+                        name="rating"
+                        value="{{ i }}"
+                        class="hidden"
+                        {% if i == selected_rating %} checked {% endif %}
+                    />
+                    <label
+                        for="{{ i }}-stars"
+                        class="rating-star text-3xl cursor-pointer {% if i <= selected_rating %}selected{% endif %}"
+                        data-value="{{ i }}"
+                    >
+                        ★
+                    </label>
+                {% endfor %}
+            </div>
+
+            <!-- Review Textarea -->
+            <textarea id="review" name="review" rows="4" required="true" class="block w-full p-3 text-sm text-white bg-gray-900 rounded-md border border-gray-700 focus:ring-blue-500 focus:border-blue-500" placeholder="Write your review"></textarea>
+
+            <div class="text-right py-4">
+                <!-- Custom Button Design -->
+                <div class="flex justify-center items-center">
+                    <div class="relative inline-flex group">
+                        <div
+                            class="absolute transition-all duration-1000 opacity-70 -inset-px bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt">
+                        </div>
+                        <button type="submit"
+                            class="relative inline-flex items-center justify-center px-8 py-3 text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+                            role="button">Submit Rating
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Rating Summary Section -->
+    <div class="lg:col-span-2 hidden lg:flex flex-col space-y-4">
+        <div class="flex items-center">
+            <span class="text-white-400 text-2xl">★★★★★</span>
+            <p class="ml-2 text-sm font-medium text-white">{{ average_rating|floatformat:1 }} out of 5</p>
+        </div>
+        <p class="text-sm font-medium text-white">{{ total_reviews }} global ratings</p>
+
+        <!-- Star rating progress bars -->
+        {% for i in star_range %}
+            <div class="flex items-center mt-2">
+                <span class="text-sm font-medium text-white hover:underline shrink-0">{{ i }} star</span>
+                <div class="w-3/4 h-4 mx-2 rating-bar-background">
+                    <div class="rating-bar-fill" style="width: {{ rating_percentages.i|default:0|floatformat:0 }}%;"></div>
+                </div>
+                <span class="text-sm font-medium text-gray-500">{{ rating_percentages.i|default:0|floatformat:0 }}%</span>
+            </div>
         {% endfor %}
-    </p>
-    <p><strong>Vehicle Model:</strong> {{ breakdown_request.vehicle_name }}</p>
-    <p><strong>Service Types:</strong></p>
-    <ul>
-        {% for service_type in breakdown_request.service_types.all %}
-            <li>{{ service_type.name }}</li>
-        {% empty %}
-            <li>No service types available.</li>
-        {% endfor %}
-    </ul>
+    </div>
+</div>
 
-    <!-- Rating Form -->
-    <h2>Submit Your Rating</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Submit Rating</button>
-    </form>
-{%endblock%}
+<script>
+document.querySelectorAll(".rating-star").forEach((star) => {
+    star.addEventListener("mouseover", (event) => {
+        const value = event.target.getAttribute("data-value");
+        resetStars();
+        highlightStars(value);
+    });
+
+    star.addEventListener("mouseleave", () => {
+        const selectedValue = document.querySelector('input[name="rating"]:checked')?.value;
+        resetStars();
+        highlightStars(selectedValue);
+    });
+
+    star.addEventListener("click", (event) => {
+        const value = event.target.getAttribute("data-value");
+        document.getElementById(`${value}-stars`).checked = true;
+        highlightStars(value);
+    });
+
+    function highlightStars(value) {
+        document.querySelectorAll(".rating-star").forEach((star) => {
+            if (parseInt(star.getAttribute("data-value")) <= value) {
+                star.classList.add("selected");
+            }
+        });
+    }
+
+    function resetStars() {
+        document.querySelectorAll(".rating-star").forEach((star) => {
+            star.classList.remove("selected");
+        });
+    }
+});
+</script>
+{% endblock %}

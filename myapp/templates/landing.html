@@ -107,6 +107,24 @@
             margin: 0;
             font-size: 1rem;
         }
+        .branding {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* Space between the text and the logo */
+    margin-bottom: 20px; /* Space below the branding section */
+}
+
+.branding h1 {
+    font-size: 2.5rem;
+    margin: 0; /* Remove margin for proper alignment */
+}
+
+.branding-logo {
+    width: 50px; /* Adjust logo size */
+    height: 50px;
+}
+
     </style>
 </head>
 <body>
@@ -117,10 +135,14 @@
                 <a href="{%url 'signin'%}" class="login-btn">Login</a>
             </div>
             <div class="glass-overlay">
-                <h1>Welcome to OnTheGoFix</h1>
+                <div class="branding">
+                    <h1>Welcome to OnTheGoFix</h1>
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/car-service.png" alt="OnTheGoFix Logo" class="branding-logo">
+                </div>
                 <p>Your online breakdown and service assistance. Get the best vehicle repair and maintenance services at your fingertips.</p>
                 <a href="{%url 'signup'%}" class="get-started-btn">Get Started</a>
             </div>
+            
         </div>
 
         <!-- Bottom Section -->

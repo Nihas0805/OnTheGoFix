@@ -22,7 +22,7 @@ def notify_on_breakdown_request(sender, instance, created, **kwargs):
     customer = instance.customer
     service_provider = instance.service_provider
 
-    if created:  # Triggered when a new BreakdownRequest is created
+    if created:  
         
         send_email(
             subject="Breakdown Request Submitted",

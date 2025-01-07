@@ -1,25 +1,139 @@
-{%extends 'provider_base.html'%}
-{%block main_block%}
-<h1>Set Payment Amount</h1>
+{% extends 'provider_base.html' %}
 
-<p>Payment for: {{ breakdown_request.customer.username }}</p>
+{% block main_block %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card custom-shadow">
+                <div class="card-header bg-light">
+                    <h2 class="text-center mb-0 py-3">Set Payment Amount</h2>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Customer Info -->
+                    <div class="customer-info mb-4 text-center">
+                        <span class="badge bg-light text-dark fs-6 p-3 custom-badge">
+                            Payment for: <strong>{{ breakdown_request.customer.username }}</strong>
+                        </span>
+                    </div>
 
+                    <!-- Error Message -->
+                    {% if error %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ error }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
 
+                    <!-- Existing Payment -->
+                    {% if payment %}
+                    <div class="alert alert-info text-center payment-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Payment already set: 
+                        <strong>Amount = {{ payment.amount }}</strong>
+                    </div>
+                    {% else %}
+                    <!-- Payment Form -->
+                    <form method="post" class="payment-form">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="amount" class="form-label">Set Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" 
+                                       class="form-control form-control-lg" 
+                                       id="amount" 
+                                       name="amount" 
+                                       required 
+                                       min="1"
+                                       placeholder="Enter amount">
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg hover-effect">
+                                Set Payment Amount
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-
-
-{% if error %}
-    <p style="color: red;">{{ error }}</p>
-{% endif %}
-
-{% if payment %}
-    <p>Payment already set: Amount = {{ payment.amount }}</p>
-{% else %}
-    <form method="post">
-        {% csrf_token %}
-        <label for="amount">Set Amount:</label>
-        <input type="number" id="amount" name="amount" required min="1">
-        <button type="submit">Submit</button>
-    </form>
-{% endif %}
-{%endblock%}
+<style>
+    .card {
+        border: none;
+        border-radius: 15px;
+        background: #ffffff;
+    }
+    .custom-shadow {
+        box-shadow: rgba(17, 17, 26, 0.1) 0px 8px 24px,
+                    rgba(17, 17, 26, 0.1) 0px 16px 56px,
+                    rgba(17, 17, 26, 0.1) 0px 24px 80px;
+        transition: all 0.3s ease;
+    }
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,.125);
+        border-radius: 15px 15px 0 0 !important;
+        background: linear-gradient(to right, #f8f9fa, #ffffff);
+    }
+    .form-control, .input-group-text {
+        border: 1px solid #e0e0e0;
+        padding: 0.75rem;
+    }
+    .input-group-text {
+        background-color: #f8f9fa;
+        font-weight: 500;
+    }
+    .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+        border-color: #28a745;
+    }
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+    }
+    .btn-success:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+        transform: translateY(-2px);
+    }
+    .hover-effect {
+        transition: all 0.3s ease;
+    }
+    .hover-effect:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .custom-badge {
+        background: linear-gradient(to right, #f8f9fa, #ffffff);
+        border: 1px solid #e0e0e0;
+        font-weight: normal;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .payment-info {
+        background: linear-gradient(to right, #e3f2fd, #f8f9fa);
+        border: none;
+        border-radius: 10px;
+        padding: 1rem;
+    }
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    .alert {
+        border-radius: 10px;
+        border: none;
+    }
+    .alert-dismissible .btn-close {
+        padding: 1.25rem;
+    }
+    h2 {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}

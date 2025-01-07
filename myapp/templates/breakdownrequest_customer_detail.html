@@ -1,138 +1,135 @@
 {% extends "customer_base.html" %}
 
 {% block main_block %}
-<div class="my-12 w-screen max-w-7xl mx-auto px-4 sm:px-6 h-screen ">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6"></h2>
+<div class="my-12 w-screen max-w-7xl mx-auto px-4 sm:px-6">
+    <!-- Logo and Header Section -->
+    <div class="text-center mb-8">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/car-service.png" alt="Logo" class="mx-auto mb-4 w-16 h-16">
+        <h1 class="text-3xl font-bold text-white tracking-wide">OnTheGoFix</h1>
+    </div>
 
-    
-    <div class="relative block overflow-hidden rounded-lg border border-gray-100 p-4 sm:p-6 lg:p-8 mb-6">
-        <span class="absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r from-green-300 via-blue-500 to-purple-600"></span>
-
-        <div class="sm:flex sm:justify-between sm:gap-4">
-            <div>
-                <h3 class="text-lg font-bold text-gray-900 sm:text-xl">
-                    Request to {{ request.service_provider.username }}
-                </h3>
-                <p class="mt-1 text-xs font-medium text-gray-600">{{ request.created_date|date:"M d, Y h:i A" }}</p>
+    <!-- Card Section -->
+    <div class="relative block overflow-hidden rounded-lg border border-gray-600 shadow-lg w-full h-[75vh] flex flex-col">
+        <!-- Top Section -->
+        <div class="bg-black p-8 flex-1 flex flex-col">            
+            <div class="mt-auto text-center">
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-white">
+                        Request to {{ request.service_provider.username }}
+                    </h3>
+                    <p class="mt-2 text-sm text-gray-300">{{ request.created_date|date:"M d, Y h:i A" }}</p>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-4 max-w-lg mx-auto">
+                    <div class="border-t border-gray-600 pt-4">
+                        <p class="text-sm text-gray-300">
+                            <span class="font-semibold text-white">Address:</span><br>
+                            {{ request.service_provider.provider_profile.address }}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Customer Details -->
-        <div class="mt-4">
-            
-            <p class="text-sm text-gray-600">
-                <strong>Address:</strong> {{ request.service_provider.provider_profile.address }}
-            </p>
-        </div>
-
-        <!-- Service Details -->
-    <div class="mb-4">
-        <p class="text-gray-600"><strong>Service Details:</strong></p>
-        {% for vehicle_type, services in grouped_services.items %}
-          {% if services.exists %}
-            <p class="text-gray-800 font-bold mt-2">
-              Vehicle Type: {{ vehicle_type|capfirst }}
-            </p>
-            <ul class="list-disc list-inside text-gray-600 ml-4">
-              {% for service in services %}
-                <li>{{ service.name }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        {% endfor %}
-        
-        <div class="mt-4">
-            <p class="text-sm text-gray-500">
-                <strong>Vehicle Model:</strong> {{ request.vehicle_name }}
-            </p>
-        </div>
-        
-        <div class="mt-4">
-            <p class="text-sm text-gray-500">
-                <strong>Description:</strong> {{ request.description }}
-            </p>
-        </div>
-
-        <dl class="mt-6 flex gap-4 sm:gap-6">
-            <div class="flex flex-col-reverse">
-                <dt class="text-sm font-medium text-gray-600">Status</dt>
-                <dd class="text-xs text-gray-500">{{ request.get_status_display }}</dd>
+        <!-- Bottom Section -->
+        <div class="bg-[#333333] p-8 flex-1 flex flex-col">
+            <!-- Vehicle and Service Details -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 border-b border-gray-600 pb-6">
+                <div class="text-center sm:text-left">
+                    <h4 class="text-white font-semibold mb-2">Vehicle Model</h4>
+                    <p class="text-gray-300">{{ request.vehicle_name }}</p>
+                </div>
+                <div class="text-center sm:text-left">
+                    <h4 class="text-white font-semibold mb-2">Service Details</h4>
+                    <p class="text-gray-300">
+                        {% for vehicle_type, services in grouped_services.items %}
+                            {% if services.exists %}
+                                {{ vehicle_type|capfirst }}:
+                                {% for service in services %}
+                                    {{ service.name }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </p>
+                </div>
             </div>
 
-            <div class="flex flex-col-reverse">
-                <dt class="text-sm font-medium text-gray-600">Updated At</dt>
-                <dd class="text-xs text-gray-500">{{ request.updated_date|date:"M d, Y h:i A" }}</dd>
-            </div> 
-            {%if request.status == "completed"%}
-            <div class="flex flex-col-reverse">
-                {%if payment%}
-                <dt class="text-sm font-medium text-gray-600">Payment status</dt>
-                <dd class="text-xs text-gray-500">{{ payment.get_payment_status_display }}</dd>
-                {%endif%}
-            </div> 
-            {%endif%}
-
-            {%if request.status == "completed"%}
-            <div class="flex flex-col-reverse">
-                {%if payment%}
-                <dt class="text-sm font-medium text-gray-600">Amount to be payed</dt>
-                <dd class="text-xs text-gray-500">{{ payment.amount }}</dd>
-                {%endif%}
-            </div> 
-            {%endif%}
-        </dl>
-        
-        <dl class="mt-6 flex gap-4 sm:gap-6">
-            {% if request.status == "accepted" %}
-            <div class="flex flex-col">
-                <dt class="text-sm font-medium text-gray-600">Pick up expected by</dt>
-                <dd class="text-xs text-gray-500">{{ request.estimated_date|date:"l jS F Y" }}</dd>
+            <!-- Images Section -->
+            {% if request.image %}
+            <div class="mb-8 text-center">
+                <button class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200" 
+                        onclick="toggleImage('{{ request.id }}')">
+                    View Images
+                </button>
+                <div id="image-dropdown-{{ request.id }}" class="hidden mt-4">
+                    <img src="{{ request.image.url }}" alt="Request Image" 
+                         class="w-40 h-40 object-cover rounded-lg shadow-md mx-auto">
+                </div>
             </div>
             {% endif %}
-            {% if request.status == "pick_up" or request.status == "in_progress" or request.status == "completed" %}
-            <div class="flex flex-col">
-                <dt class="text-sm font-medium text-gray-600">Delivery expected by</dt>
-                <dd class="text-xs text-gray-500">{{ request.estimated_date|date:"l jS F Y" }}</dd>
-            </div>
-            {% endif %}
-        </dl>
-        
 
-       
-
-        <!-- Get Image Button -->
-        {% if request.image %}
-        <div class="mt-6">
-            <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700" onclick="toggleImage('{{ request.id }}')">
-                Get Image
-            </button>
-            <div id="image-dropdown-{{ request.id }}" class="hidden mt-4">
-                <img src="{{ request.image.url }}" alt="Request Image" class="w-32 h-32 rounded-lg shadow-md cursor-pointer">
-            </div>
-        </div>
-        {% endif %}
-
-        
-        
-        {%if request.status == "completed"%}     
-        <div class="mt-6">
-            {% if payment %}
-                {% if payment.payment_status != "completed" %}
-                <a href="{% url 'customer-payment' request.id %}" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
-                     Pay
-                </a>
-                {% else %}
-                <p class="text-green-600 font-bold"></p>
+            <!-- Status Information -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-8 border-t border-gray-600 pt-6">
+                <div class="text-center">
+                    <dt class="text-sm font-semibold text-white mb-1">Status</dt>
+                    <dd class="text-sm text-gray-300">{{ request.get_status_display }}</dd>
+                </div>
+                <div class="text-center">
+                    <dt class="text-sm font-semibold text-white mb-1">Last Updated</dt>
+                    <dd class="text-sm text-gray-300">{{ request.updated_date|date:"M d, Y h:i A" }}</dd>
+                </div>
+                {% if request.status == "completed" and payment %}
+                <div class="text-center">
+                    <dt class="text-sm font-semibold text-white mb-1">Payment Status</dt>
+                    <dd class="text-sm text-gray-300">{{ payment.get_payment_status_display }}</dd>
+                </div>
+                <div class="text-center">
+                    <dt class="text-sm font-semibold text-white mb-1">Amount Due</dt>
+                    <dd class="text-sm text-gray-300">{{ payment.amount }}</dd>
+                </div>
                 {% endif %}
-            {% else %}
-            <p class="text-red-600 font-bold">No payment initiated for this request.</p>
+            </div>
 
+            <!-- Delivery Information -->
+            {% if request.status in "accepted pick_up in_progress completed" %}
+            <div class="text-center border-t border-gray-600 pt-6">
+                {% if request.status == "accepted" %}
+                <p class="text-sm text-gray-300 mb-2">
+                    <span class="font-semibold text-white">Pick up expected by:</span>
+                    {{ request.estimated_date|date:"l jS F Y" }}
+                </p>
+                {% endif %}
+                {% if request.status in "pick_up in_progress completed" %}
+                <p class="text-sm text-gray-300">
+                    <span class="font-semibold text-white">Delivery expected by:</span>
+                    {{ request.estimated_date|date:"l jS F Y" }}
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Payment Section -->
+            {% if request.status == "completed" %}
+            <div class="mt-auto pt-6 text-center">
+                {% if payment %}
+                    {% if payment.payment_status != "completed" %}
+                    <div class="inline-flex group relative">
+                        <div class="absolute transition-all duration-1000 opacity-70 -inset-px bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt"></div>
+                        <a href="{% url 'customer-payment' request.id %}" 
+                           class="relative inline-flex items-center justify-center px-8 py-3 text-lg font-bold text-white transition-all duration-200 bg-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900">
+                            Process Payment
+                        </a>
+                    </div>
+                    {% else %}
+                    <p class="text-white font-bold">✓ Payment Complete</p>
+                    {% endif %}
+                {% else %}
+                <p class="text-red-500 font-semibold">Payment not initiated</p>
+                {% endif %}
+            </div>
             {% endif %}
         </div>
-        {%endif%}
-        
-    
-    
+    </div>
 </div>
 
 <script>
@@ -140,13 +137,5 @@
         const dropdown = document.getElementById(`image-dropdown-${requestId}`);
         dropdown.classList.toggle('hidden');
     }
-
 </script>
-
-<style>
-    .zoomed {
-        transform: scale(2);
-        transition: transform 0.3s ease-in-out;
-    }
-</style>
 {% endblock %}

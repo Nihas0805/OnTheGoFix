@@ -1,55 +1,153 @@
 {% extends "provider_base.html" %}
 
 {% block main_block %}
-<h2>Update Breakdown Request</h2>
-
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-
-    <!-- Readonly text input for Customer -->
-    <div class="form-group">
-        Service To : {{breakdown_request.customer.username}}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card custom-shadow">
+                <div class="card-header bg-light">
+                    <h2 class="text-center mb-0 py-3 text-primary">Update Breakdown Request</h2>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <!-- Customer Information -->
+                        <div class="mb-4">
+                            <label class="form-label text-muted">Service To</label>
+                            <input type="text" class="form-control bg-light hover-effect" value="{{breakdown_request.customer.username}}" readonly>
+                        </div>
+                        
+                        <!-- Service Types -->
+                        <div class="mb-4">
+                            <label for="service_types_display" class="form-label text-muted">Service Types</label>
+                            <textarea id="service_types_display" class="form-control bg-light hover-effect" readonly rows="3">{{ form.service_types_display.value }}</textarea>
+                        </div>
+                        
+                        <!-- Status -->
+                        <div class="mb-4">
+                            <label for="status" class="form-label text-muted">Status</label>
+                            <div class="form-select-wrapper hover-effect">
+                                {{ form.status }}
+                            </div>
+                        </div>
+                        
+                        <!-- Estimated Date -->
+                        <div class="mb-4">
+                            <label for="estimated_date" class="form-label text-muted">Estimated Date</label>
+                            {{ form.estimated_date }}
+                        </div>
+                        
+                        <!-- Error Messages -->
+                        {% if form_errors %}
+                        <div class="alert alert-danger mb-4 custom-shadow-sm">
+                            <ul class="list-unstyled mb-0">
+                                {% for field, errors in form_errors.items %}
+                                <li>
+                                    <strong>{{ field }}:</strong>
+                                    <ul>
+                                        {% for error in errors %}
+                                        <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'provider-index' %}" class="btn btn-light px-4 hover-effect">Cancel</a>
+                            <button type="submit" class="btn btn-success px-4 hover-effect">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <!-- Hidden inputs for other fields -->
-
-    <!-- Readonly display for Service Types -->
-    <div class="form-group">
-        <label for="service_types_display">Service Types</label>
-        <textarea id="service_types_display" class="form-control" readonly>{{ form.service_types_display.value }}</textarea>
-    </div>
-
-    <!-- Editable Status Dropdown -->
-    <div class="form-group">
-        <label for="status">Status</label>
-        {{ form.status }}
-    </div>
-
-    <div class="form-group">
-        <label for="estimated_date">Estimated Date</label>
-        {{ form.estimated_date }}
-    </div>
-
-    <!-- Action buttons -->
-    <div class="form-group mt-3">
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-        <a href="{% url 'provider-index' %}" class="btn btn-secondary">Cancel</a>
-    </div>
-    {% if form_errors %}
-<div class="alert alert-danger">
-    <ul>
-        {% for field, errors in form_errors.items %}
-            <li><strong>{{ field }}:</strong>
-                <ul>
-                    {% for error in errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            </li>
-        {% endfor %}
-    </ul>
 </div>
-{% endif %}
 
-</form>
-{% endblock %}          
+<style>
+    .card {
+        border: none;
+        border-radius: 15px;
+        background: #ffffff;
+    }
+    .custom-shadow {
+        box-shadow: rgba(17, 17, 26, 0.1) 0px 8px 24px,
+                    rgba(17, 17, 26, 0.1) 0px 16px 56px,
+                    rgba(17, 17, 26, 0.1) 0px 24px 80px;
+        transition: all 0.3s ease;
+    }
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,.125);
+        border-radius: 15px 15px 0 0 !important;
+        background: linear-gradient(to right, #f8f9fa, #ffffff);
+    }
+    .form-control, .form-select, select, input {
+        padding: 0.75rem;
+        border-radius: 10px;
+        width: 100%;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+    }
+    .form-control:focus, .form-select:focus, select:focus, input:focus {
+        box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+        border-color: #28a745;
+        outline: 0;
+    }
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+    .btn-success:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+        transform: translateY(-2px);
+    }
+    .text-muted {
+        font-weight: 500;
+        color: #495057 !important;
+    }
+    select {
+        background-color: #fff;
+        height: calc(3.5rem + 2px);
+    }
+    .form-select-wrapper {
+        position: relative;
+    }
+    .form-select-wrapper select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+    }
+    .hover-effect {
+        transition: all 0.3s ease;
+    }
+    .hover-effect:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .form-label {
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+    .card-body {
+        background: linear-gradient(to bottom right, #ffffff, #fcfcfc);
+    }
+    .text-primary {
+        color: #2c3e50 !important;
+    }
+</style>
+{% endblock %}

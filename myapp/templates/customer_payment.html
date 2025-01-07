@@ -1,94 +1,301 @@
-{%extends 'customer_base.html'%}
-{%block main_block%}
-<h1>Make Payment </h1>
-<p>Payment To: {{ breakdown_request.service_provider.username }}</p>
-<p>Amount: ₹{{ payment.amount }}</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Page</title>
+    <style>
+        /* Base styles */
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: black;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-{% if payment.payment_status == 'completed' %}
-    <p><strong>Payment Status:</strong> Completed</p>
-    <p>No further payment is required.</p>
-{% else %}
-    <!-- Payment Method Selection Form -->
-    <form id="payment-form" method="post">
-        {% csrf_token %}
-        <label for="payment_method">Payment Method:</label>
-        <select name="payment_method" id="payment_method" required>
-            <option value="cod">Cash on Delivery</option>
-            <option value="razorpay">Razorpay</option>
-        </select>
-        <br><br>
-        <button type="submit" id="proceed-btn">Proceed</button>
-    </form>
-{% endif %}
+        /* Background splash effect */
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 30%, rgba(0, 0, 0, 0.8), rgba(50, 50, 50, 0.7), transparent),
+                        radial-gradient(circle at 70% 70%, rgba(30, 30, 30, 0.8), rgba(80, 80, 80, 0.6), transparent);
+            z-index: -1;
+        }
 
-<!-- Razorpay Checkout Script -->
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script>
-document.getElementById('payment-form').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent default form submission
+        /* Header styles */
+        .header {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: right;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    const paymentMethod = document.getElementById('payment_method').value;
+        .header .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    if (paymentMethod === 'razorpay') {
-        // Send request to backend to initiate Razorpay Order
-        fetch("{{ request.path }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({ payment_method: 'razorpay' })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert(data.error); // Show error if payment is already done or invalid method
-                return;
-            }
+        .header .logo-container img {
+            width: 40px;
+            height: 40px;
+        }
 
-            const options = {
-                key: data.key,
-                amount: data.amount,
-                currency: "INR",
-                name: data.name,
-                description: data.description,
-                order_id: data.order_id,
-                handler: function (response) {
-                    // After payment, send data to backend for verification
-                    fetch("{% url 'razorpay-verification' %}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        },
-                        body: JSON.stringify({
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature
-                        })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.message) {
-                            alert(data.message); // Success message
-                            window.location.href = "/customer/dashboard/";  // Redirect after success
-                        } else if (data.error) {
-                            alert(data.error); // Error message
+        .header .logo-container .logo-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .header a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 0.9rem;
+        }
+
+        .content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        /* Left section */
+        .content .left {
+            max-width: 500px;
+        }
+
+        .content .left h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .content .left p {
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .content .left img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        /* Right section */
+        .content .right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            color: white;
+            width: 100%;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .form-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .form-buttons .relative {
+            display: inline-block;
+            position: relative;
+        }
+
+        .form-buttons .relative .absolute {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 12px;
+            background: linear-gradient(to right, #44BCFF, #FF44EC, #FF675E);
+            filter: blur(6px);
+            z-index: 0;
+        }
+
+        .form-buttons .relative button {
+            position: relative;
+            z-index: 1;
+            background: black;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .form-buttons .relative button:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="logo-container">
+            <img src="https://img.icons8.com/ios-filled/50/ffffff/car-service.png" alt="Logo">
+            <div class="logo-text">OnTheGoFix</div>
+        </div>
+        <div>
+            <a href="{%url 'customer-dashboard'%}">Go back!</a>
+            <a href="{%url 'customer-index'%}">Home</a>
+            
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Left Section -->
+        <div class="left">
+            <h1>Payment Made Easy.</h1>
+            <p>Free Payment Gateway. Supports Netbanking, Credit, Debit Cards, UPI, etc.</p>
+            <img src="https://www.shutterstock.com/image-photo/close-gold-bitcoin-coin-spinning-on-2491707327" alt="Payment">
+        </div>
+
+        <!-- Right Section -->
+        <div class="right">
+            <!-- Card 1: Payment To -->
+            <div class="card">
+                <h2>Payment To</h2>
+                <p><strong>{{ breakdown_request.service_provider.username }}</strong></p>
+            </div>
+
+            <!-- Card 2: Amount -->
+            <div class="card">
+                <h2>Amount</h2>
+                <p>₹{{ payment.amount }}</p>
+            </div>
+
+            <!-- Card 3: Payment Options -->
+            <div class="card">
+                <h2>Choose Payment Method</h2>
+                <form id="payment-form" method="post">
+                    {% csrf_token %}
+                    <label>
+                        <input type="radio" name="payment_method" value="cod" required> Cash on Delivery
+                    </label><br>
+                    <label>
+                        <input type="radio" name="payment_method" value="razorpay" required> Razorpay
+                    </label>
+                    <div class="form-buttons">
+                        <div class="relative inline-flex group">
+                            <div
+                                class="absolute transition-all duration-1000 opacity-70 -inset-px bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200">
+                            </div>
+                            <button type="submit" title="Proceed"
+                                class="relative inline-flex items-center justify-center px-8 py-2 text-lg font-bold text-white transition-all duration-200 bg-black font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                                role="button">Pay
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Razorpay Checkout Script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        document.getElementById('payment-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+
+            if (paymentMethod === 'razorpay') {
+                fetch("{{ request.path }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ payment_method: 'razorpay' })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const options = {
+                        key: data.key,
+                        amount: data.amount,
+                        currency: "INR",
+                        name: data.name,
+                        description: data.description,
+                        order_id: data.order_id,
+                        handler: function (response) {
+                            fetch("{% url 'razorpay-verification' %}", {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': '{{ csrf_token }}'
+                                },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature
+                                })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.message) {
+                                    alert(data.message);
+                                    window.location.href = "/customer/dashboard/";
+                                } else if (data.error) {
+                                    alert(data.error);
+                                }
+                            })
+                            .catch(err => console.error("Verification Error:", err));
                         }
-                    })
-                    .catch(err => console.error("Verification Error:", err));
-                },
-            };
+                    };
 
-            const rzp = new Razorpay(options);
-            rzp.open();
-        })
-        .catch(err => console.error("Error:", err));
-    } else {
-        // For COD, submit the form as usual
-        this.submit();
-    }
-});
-</script>
-
-{%endblock%}
+                    const rzp = new Razorpay(options);
+                    rzp.open();
+                })
+                .catch(err => console.error("Error:", err));
+            } else {
+                this.submit();
+            }
+        });
+    </script>
+</body>
+</html>

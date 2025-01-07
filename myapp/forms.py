@@ -13,9 +13,8 @@ class SignUpForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super(SignUpForm, self).__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            field.help_text = None  # Remove help text
-            field.label = ''  # Remove labels, if desired
-            # Apply Bootstrap 'form-control' class to each field
+            field.help_text = None   
+            field.label = ''  
             field.widget.attrs.update({'class': 'form-control'})
           
         
@@ -73,11 +72,7 @@ class ServiceProviderProfileForm(forms.ModelForm):
 
 class BreakdownRequestCreateForm(forms.ModelForm):
     
-    service_provider_username = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
-        required=False,
-        label="Service Provider"
-    )
+    
     customer_address = forms.CharField(
         widget=forms.TextInput(attrs={'class': 'form-control'}),
         required=False,
@@ -113,9 +108,6 @@ class BreakdownRequestCreateForm(forms.ModelForm):
         if service_provider:
             self.fields['service_types'].queryset = service_provider.service_types.all()
 
-       
-        if service_provider and service_provider.user:
-            self.fields['service_provider_username'].initial = service_provider.user.username
 
         if user and hasattr(user, 'customer_profile'):
             self.fields['customer_address'].initial = user.customer_profile.address

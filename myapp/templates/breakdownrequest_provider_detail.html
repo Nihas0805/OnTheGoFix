@@ -1,152 +1,144 @@
 {% extends "provider_base.html" %}
 
 {% block main_block %}
-<div class="my-12 w-screen max-w-7xl mx-auto px-4 sm:px-6 h-screen ">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6"></h2>
+<div class="my-12 w-screen max-w-7xl mx-auto px-4 sm:px-6">
+    <!-- Logo and Company Name -->
+    <div class="flex justify-center items-center mb-8">
+        <img class="h-10 w-auto" src="https://img.icons8.com/ios-filled/50/000000/car-service.png" alt="Logo">
+        <div class="text-black font-bold text-2xl ml-3">OnTheGoFix</div>
+    </div>
 
-    
-    <div class="relative block overflow-hidden rounded-lg border border-gray-100 p-4 sm:p-6 lg:p-8 mb-6">
-        <span class="absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r from-green-300 via-blue-500 to-purple-600"></span>
-
-        <div class="sm:flex sm:justify-between sm:gap-4">
-     
-            <div>
-                <h3 class="text-lg font-bold text-gray-900 sm:text-xl">
-                    Request by {{ request.customer.username }}
-                </h3>
-                <p class="mt-1 text-xs font-medium text-gray-600">{{ request.created_date|date:"M d, Y h:i A" }}</p>
-            </div>
-
+    <!-- Main Card -->
+    <div class="relative block rounded-xl border border-gray-200 p-8 bg-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <!-- Header Section -->
+        <div class="text-center mb-8">
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">
+                Request by {{ request.customer.username }}
+            </h3>
+            <p class="text-sm text-gray-600">{{ request.created_date|date:"M d, Y h:i A" }}</p>
         </div>
 
         <!-- Customer Details -->
-        <div class="mt-4">
-            <p class="text-sm text-gray-600">
-                <strong>Phone Number:</strong> {{ request.customer.phone_number }}
-            </p>
-            <p class="text-sm text-gray-600">
-                <strong>Address:</strong> {{ request.customer.customer_profile.address }}
-            </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-gray-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-900 mb-4">Customer Information</h4>
+                <p class="text-sm text-gray-700 mb-2">
+                    <span class="font-medium">Phone Number:</span> {{ request.customer.phone_number }}
+                </p>
+                <p class="text-sm text-gray-700 mb-4">
+                    <span class="font-medium">Address:</span> {{ request.customer.customer_profile.address }}
+                </p>
+                {% if request.latitude and request.longitude %}
+                <button 
+                    onclick="redirectToMap({{ request.latitude }}, {{ request.longitude }})"
+                    class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-md">
+                    Get Location
+                </button>
+                {% endif %}
+            </div>
+
+            <div class="bg-gray-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-900 mb-4">Vehicle Information</h4>
+                <p class="text-sm text-gray-700 mb-2">
+                    <span class="font-medium">Vehicle Model:</span> {{ request.vehicle_name }}
+                </p>
+                <p class="text-sm text-gray-700 mb-4">
+                    <span class="font-medium">Description:</span> {{ request.description }}
+                </p>
+                {% if request.image %}
+                <button 
+                    onclick="toggleImage('{{ request.id }}')"
+                    class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300 shadow-md">
+                    Preview Image
+                </button>
+                <div id="image-dropdown-{{ request.id }}" class="hidden mt-4">
+                    <img src="{{ request.image.url }}" 
+                         alt="Breakdown Request Image"
+                         class="w-full rounded-lg shadow-lg cursor-pointer hover:scale-105 transition-transform duration-300"
+                         onclick="zoomImage(this)">
+                </div>
+                {% endif %}
+            </div>
         </div>
 
         <!-- Service Details -->
-        <div class="mb-4">
-            <p class="text-gray-600"><strong>Service Details:</strong></p>
+        <div class="bg-gray-50 p-6 rounded-lg mb-8">
+            <h4 class="font-semibold text-gray-900 mb-4">Service Details</h4>
             {% for vehicle_type, services in grouped_services.items %}
                 {% if services.exists %}
-                <p class="text-gray-800 font-bold mt-2">
-                    Vehicle Type: {{ vehicle_type|capfirst }}
-                </p>
-                <ul class="list-disc list-inside text-gray-600 ml-4">
-                    {% for service in services %}
-                    <li>{{ service.name }}</li>
-                    {% endfor %}
-                </ul>
+                <div class="mb-4 last:mb-0">
+                    <p class="text-gray-800 font-medium mb-2">
+                        Vehicle Type: {{ vehicle_type|capfirst }}
+                    </p>
+                    <ul class="list-disc list-inside text-gray-700 ml-4 space-y-1">
+                        {% for service in services %}
+                        <li>{{ service.name }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
                 {% endif %}
             {% endfor %}
-            </div>
-            
-            <div class="mt-4">
-                <p class="text-sm text-gray-500">
-                    <strong>Vehicle Model:</strong> {{ request.vehicle_name }}
-                </p>
-            </div>
-            <div class="mt-4">
-                <p class="text-sm text-gray-500">
-                    <strong>Description:</strong> {{ request.description }}
-                </p>
+        </div>
+
+        <!-- Status Information -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <dt class="text-sm font-medium text-gray-900">Status</dt>
+                <dd class="mt-1 text-sm text-gray-700">{{ request.get_status_display }}</dd>
             </div>
 
-            <dl class="mt-6 flex gap-4 sm:gap-6">
-                <div class="flex flex-col-reverse">
-                    <dt class="text-sm font-medium text-gray-600">Status</dt>
-                    <dd class="text-xs text-gray-500">{{ request.get_status_display }}</dd>
-                </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <dt class="text-sm font-medium text-gray-900">Updated At</dt>
+                <dd class="mt-1 text-sm text-gray-700">{{ request.updated_date|date:"M d, Y h:i A" }}</dd>
+            </div>
 
-                <div class="flex flex-col-reverse">
-                    <dt class="text-sm font-medium text-gray-600">Updated At</dt>
-                    <dd class="text-xs text-gray-500">{{ request.updated_date|date:"M d, Y h:i A" }}</dd>
-                </div> 
-                {%if request.status == "completed"%}
-            <div class="flex flex-col-reverse">
-                {%if payment%}
-                <dt class="text-sm font-medium text-gray-600">Payment status</dt>
-                <dd class="text-xs text-gray-500">{{ payment.get_payment_status_display }}</dd>
-                {%endif%}
-            </div> 
-            {%endif%}
-            </dl>
-            <dl class="mt-6 flex gap-4 sm:gap-6">
+            {% if request.status == "completed" and payment %}
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <dt class="text-sm font-medium text-gray-900">Payment Status</dt>
+                <dd class="mt-1 text-sm text-gray-700">{{ payment.get_payment_status_display }}</dd>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Estimated Dates -->
+        {% if request.status == "accepted" or request.status == "pick_up" or request.status == "in_progress" or request.status == "completed" %}
+        <div class="bg-gray-50 p-4 rounded-lg mb-8">
+            <dt class="text-sm font-medium text-gray-900">
                 {% if request.status == "accepted" %}
-                <div class="flex flex-col">
-                    <dt class="text-sm font-medium text-gray-600">Pick up has to be done by</dt>
-                    <dd class="text-xs text-gray-500">{{ request.estimated_date|date:"l jS F Y" }}</dd>
-                </div>
-                {% endif %}
-                {% if request.status == "pick_up" or request.status == "in_progress" or request.status == "completed" %}
-                <div class="flex flex-col">
-                    <dt class="text-sm font-medium text-gray-600">Delivery has to done by</dt>
-                    <dd class="text-xs text-gray-500">{{ request.estimated_date|date:"l jS F Y" }}</dd>
-                </div>
-                {% endif %}
-                {% if request.status == "pending" or request.status == "cancelled" %}
-                
-                {% endif %}
-            </dl>
-    
-
-            <!-- Get Location Button -->
-            {%if request.latitude and request.longitude %}
-            <div class="mt-6">
-                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" 
-                        onclick="redirectToMap({{ request.latitude }}, {{ request.longitude }})">
-                    Get Location
-                </button>
-            </div>
-            {%endif%}
-
-            <!-- Get Image Button -->
-            <div class="mt-6">
-                <p class="text-gray-600"><strong></strong></p>
-                {% if request.image %}
-                <button class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700"
-                        onclick="toggleImage('{{ request.id }}')">
-                  Preview Image
-                </button>
-                <div id="image-dropdown-{{ request.id }}" class="hidden mt-4">
-                  <img src="{{ request.image.url }}" alt="Breakdown Request Image"
-                       class="w-32 h-32 rounded-lg shadow-md transform transition-transform duration-300 cursor-pointer"
-                       onclick="zoomImage(this)">
-                </div>
+                Pick up has to be done by
                 {% else %}
-                <p class="text-gray-500">No Image Provided</p>
+                Delivery has to be done by
                 {% endif %}
-              </div>
+            </dt>
+            <dd class="mt-1 text-sm text-gray-700">{{ request.estimated_date|date:"l jS F Y" }}</dd>
+        </div>
+        {% endif %}
 
-            <!-- Update Button -->
-            <div class="mt-6">
-                <a href="{% url 'breakdownrequest-edit' request.id %}" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
-                    Update Breakdown Request
-                </a>
-            </div>
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-4 justify-center">
+            <a href="{% url 'breakdownrequest-edit' request.id %}" 
+               class="px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors duration-300 shadow-md">
+                Update Request
+            </a>
 
             {% if request.status == "completed" %}
-    <div class="mt-6">
-        {% if payment %}
-            {% if payment.payment_status != "completed" %}
-                <a href="{% url 'set-payment' request.id %}" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
+                {% if payment %}
+                    {% if payment.payment_status != "completed" %}
+                    <a href="{% url 'set-payment' request.id %}" 
+                       class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-300 shadow-md">
+                        Initiate Payment
+                    </a>
+                    {% endif %}
+                {% else %}
+                <a href="{% url 'set-payment' request.id %}" 
+                   class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-300 shadow-md">
                     Initiate Payment
                 </a>
-            {% else %}
-                <p class="text-green-600 font-bold"> </p>
+                {% endif %}
             {% endif %}
-        {% else %}
-            <a href="{% url 'set-payment' request.id %}" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700">
-                Initiate Payment
-            </a>
-        {% endif %}
+        </div>
     </div>
-{% endif %}
+</div>
 
 <script>
     function toggleImage(requestId) {
@@ -157,17 +149,14 @@
     function redirectToMap(latitude, longitude) {
         if (latitude && longitude) {
             const googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
-            window.open(googleMapsUrl, '_blank'); // Open Google Maps in a new tab
+            window.open(googleMapsUrl, '_blank');
         } else {
             alert("Location data not available.");
         }
     }
-</script>
 
-<style>
-    .zoomed {
-        transform: scale(2);
-        transition: transform 0.3s ease-in-out;
+    function zoomImage(img) {
+        img.classList.toggle('scale-150');
     }
-</style>
+</script>
 {% endblock %}

@@ -3,81 +3,79 @@
 {% block main_block %}
 <div class="my-12 w-screen max-w-7xl mx-auto px-4 sm:px-6 h-screen">
     {% for item in data %}
-    <div class="relative block overflow-hidden rounded-lg border border-gray-100 p-4 sm:p-6 lg:p-8 mb-6">
+    <div class="relative block overflow-hidden rounded-lg p-4 sm:p-6 lg:p-8 mb-6 bg-black text-white border border-white">
         <span class="absolute inset-x-0 bottom-0 h-2 bg-gradient-to-r from-green-300 via-blue-500 to-purple-600"></span>
 
-        <div class="sm:flex sm:justify-between sm:gap-4">
-            <div>
-                <h3 class="text-lg font-bold text-gray-900 sm:text-xl">
-                    Request to {{ item.service_provider.username }}
-                </h3>
-                <p class="mt-1 text-xs font-medium text-gray-600">{{ item.created_date|date:"M d, Y h:i A" }}</p>
+        <!-- Header: Name and Rating -->
+        <div class="text-center">
+            <h3 class="text-lg font-bold sm:text-xl">
+                Request to {{ item.service_provider.username }}
+            </h3>
+            <p class="mt-1 text-xs font-medium">{{ item.created_date|date:"M d, Y h:i A" }}</p>
 
-                <!-- Display rating stars or the "Rate the request" link based on whether a rating exists -->
-                {% if item.rating %}
-                <p class="mt-2">
-                    
-                    <span class="ml-2">{{ item.rating.display_stars }}</span>
-                </p>
-                {% else %}
-                <p class="mt-2">
-                    <a href="{% url 'create-rating' item.id %}" class="text-yellow-600 hover:text-yellow-700">Rate the request</a>
-                </p>
-                {% endif %}
+            {% if item.rating %}
+            <p class="mt-2">
+                <span class="ml-2">{{ item.rating.display_stars }}</span>
+            </p>
+            {% else %}
+            <p class="mt-2">
+                <a href="{% url 'create-rating' item.id %}" class="text-yellow-400 hover:text-yellow-500">Rate the request</a>
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Vehicle Services and Vehicle Model -->
+        <div class="mt-4 bg-[#333333] p-4 rounded-lg border border-white">
+            <div class="flex flex-wrap items-center justify-center gap-8">
+                <!-- Vehicle Services -->
+                <div class="flex-1 text-center">
+                    <h4 class="text-sm font-bold">Vehicle Types and Services:</h4>
+                    <div class="mt-2">
+                        {% if item.service_types.exists %}
+                        {% for service in item.service_types.all %}
+                        <div class="mt-2">
+                            <strong>{{ service.vehicle_type|capfirst }}</strong>
+                            <ul class="list-disc pl-4 inline-block text-left">
+                                <li>{{ service.name }}</li>
+                            </ul>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <p class="text-gray-400">No services available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Vehicle Model -->
+                <div class="flex-1 text-center">
+                    <h4 class="text-sm font-bold">Vehicle Model:</h4>
+                    <p class="text-xs">{{ item.vehicle_name }}</p>
+                </div>
             </div>
         </div>
 
-         <!-- Service Type Listing (by Vehicle Type) -->
-<div class="mt-4">
-    <h4 class="text-sm font-bold text-gray-700">Vehicle Types and Services:</h4>
-    <div class="mt-2">
-        {% if item.service_types.exists %}
-        {% for service in item.service_types.all %}
-        <div class="mt-2">
-            <strong>{{ service.vehicle_type|capfirst }}</strong>
-            <ul class="list-disc pl-4">
-                <li>{{ service.name }}</li>
-            </ul>
+        <!-- Payment and Delivery Details -->
+        <div class="mt-4 bg-[#333333] p-4 rounded-lg border border-white">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                <!-- Delivered At -->
+                <div>
+                    <dt class="text-sm font-medium">Delivered At</dt>
+                    <dd class="text-xs">{{ item.updated_date|date:"M d, Y h:i A" }}</dd>
+                </div>
+
+                <!-- Payment Method -->
+                {% if item.payment %}
+                <div>
+                    <dt class="text-sm font-medium">Payment Method</dt>
+                    <dd class="text-xs">{{ item.payment.payment_method|capfirst }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium">Payment Amount</dt>
+                    <dd class="text-xs">{{ item.payment.amount }}</dd>
+                </div>
+                {% endif %}
+            </div>
         </div>
-        {% endfor %}
-        {% else %}
-        <p class="text-gray-500">No services available.</p>
-        {% endif %}
-    </div>
-</div>
-
-<strong>Vehicle Model:</strong> {{ item.vehicle_name }}<br>
-
-
-       
-<div class="flex flex-col">
-    <dl>
-        <dt class="text-sm font-medium text-gray-600">Delivered At</dt>
-        <dd class="text-xs text-gray-500">{{ item.updated_date|date:"M d, Y h:i A" }}</dd>
-    </dl>
-    {% if item.payment %}
-    <dl class="mt-2">
-        <dt class="text-sm font-medium text-gray-600">Payment Method</dt>
-        <dd class="text-xs text-gray-500">
-            
-                {{ item.payment.payment_method|capfirst }}
-            
-           
-        </dd>
-    </dl>
-    <dl class="mt-2">
-        <dt class="text-sm font-medium text-gray-600">Payment Amount</dt>
-        <dd class="text-xs text-gray-500">
-            
-                {{ item.payment.amount }}
-            
-           
-        </dd>
-    </dl>
-    {% endif %}
-</div>
-        
-
     </div>
     {% empty %}
     <p class="text-center text-gray-500">No breakdown requests available.</p>

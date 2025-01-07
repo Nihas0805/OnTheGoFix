@@ -1,47 +1,92 @@
 {% extends 'customer_base.html' %}
 {% block main_block %}
 {% load custom_filters %}
-<h1>Ratings for {{ service_provider.user.username }}</h1>
-    
-    {% if ratings %}
-        <ul>
-            {% for rating in ratings %}
-                <li>
-                    <strong>Rated by:</strong> {{ rating.breakdown_request.customer.username }}<br>
-                    <strong>Service Provided:</strong> 
-                            {% if rating.breakdown_request.service_types.exists %}
-                            {% for service in rating.breakdown_request.service_types.all %}
-                            <div class="mt-2">
-                                <strong>{{ service.vehicle_type|capfirst }}</strong>
-                                <ul class="list-disc pl-4">
-                                    <li>{{ service.name }}</li>
-                                </ul>
-                            </div>
-                            {% endfor %}
-                            {% else %}
-                            <p class="text-gray-500">No services available.</p>
-                            {% endif %}
-                       <br>
-                    
-                       <strong>Vehicle Model:</strong> {{ rating.breakdown_request.vehicle_name }}<br>
 
-                    <strong>Rating:</strong> 
-                    <span>
-                        {% for _ in rating.rating|add:"0"|range_filter %}
-                            ★
-                        {% endfor %}
-                        {% for _ in 5|add:"-rating.rating"|add:"0"|range_filter %}
-                            ☆
-                        {% endfor %}
-                    </span><br>
-                    <strong>Review:</strong> {{ rating.review|default:"No review provided." }}<br>
-                    <strong>Created on:</strong> {{ rating.created_date|date:"F j, Y, g:i a" }}
-                </li>
-                <hr>
-            {% endfor %}
-        </ul>
+<div class="container mx-auto px-4 py-8">
+    <!-- Rating Overview Card -->
+    <div class="max-w-4xl mx-auto mb-12 bg-black border border-gray-600 rounded-xl p-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center">
+            <div class="flex justify-center sm:justify-start -space-x-4">
+                <img class="w-16 h-16 rounded-full border-2 border-white" src="https://picsum.photos/id/10/100/100" alt="Profile">
+                <img class="w-16 h-16 rounded-full border-2 border-white" src="https://picsum.photos/id/20/100/100" alt="Profile">
+                <img class="w-16 h-16 rounded-full border-2 border-white" src="https://picsum.photos/id/30/100/100" alt="Profile">
+            </div>
+            <div class="flex flex-col items-center sm:items-start sm:border-l border-gray-600 sm:pl-8">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-4xl font-bold text-white">{{ service_provider.average_rating }}</span>
+                    <img class="w-8" src="https://www.svgrepo.com/show/513354/star.svg" alt="stars">
+                </div>
+                <p class="text-gray-400 text-lg">{{ service_provider.total_reviews }} reviews</p>
+            </div>
+        </div>
+    </div>
+
+    {% if ratings %}
+    <div class="max-w-3xl mx-auto space-y-8">
+        {% for rating in ratings %}
+        <div class="bg-black border border-gray-600 rounded-xl overflow-hidden">
+            <!-- User Header -->
+            <div class="p-6 border-b border-gray-600">
+                <h3 class="text-xl font-semibold text-white text-center">{{ rating.breakdown_request.customer.username }}</h3>
+                <div class="flex justify-center gap-2 mt-4">
+                    {% for _ in rating.rating|add:"0"|range_filter %}
+                    <svg class="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                    </svg>
+                    {% endfor %}
+                    {% for _ in 5|add:"-rating.rating"|add:"0"|range_filter %}
+                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                    </svg>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Review Content -->
+            <div class="bg-[#333333] p-6">
+                <div class="grid gap-6">
+                    <!-- Service Types -->
+                    <div class="grid grid-cols-4 gap-4">
+                        <div class="text-white font-semibold">Service Types:</div>
+                        <div class="col-span-3">
+                            {% if rating.breakdown_request.service_types.exists %}
+                                {% for service in rating.breakdown_request.service_types.all %}
+                                <div class="mb-2 text-gray-300">
+                                    <span class="font-medium">{{ service.vehicle_type|capfirst }}</span>
+                                    <ul class="list-disc ml-6 mt-1">
+                                        <li>{{ service.name }}</li>
+                                    </ul>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-gray-400">No services available.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Review -->
+                    <div class="grid grid-cols-4 gap-4 border-t border-gray-600 pt-4">
+                        <div class="text-white font-semibold">Review:</div>
+                        <div class="col-span-3 text-gray-300">
+                            {{ rating.review|default:"No review provided." }}
+                        </div>
+                    </div>
+
+                    <!-- Creation Date -->
+                    <div class="grid grid-cols-4 gap-4 border-t border-gray-600 pt-4">
+                        <div class="text-white font-semibold">Created at:</div>
+                        <div class="col-span-3 text-gray-300">
+                            {{ rating.created_date|date:"F j, Y, g:i a" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
     {% else %}
-        <p>No ratings available for this service provider.</p>
+    <p class="text-center text-gray-400 text-lg">No ratings available for this service provider.</p>
     {% endif %}
-    
+</div>
+
 {% endblock %}
